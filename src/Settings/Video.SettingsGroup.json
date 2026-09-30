@@ -54,6 +54,13 @@
     "default":     "rtsp://192.168.2.36:8554/infrared"
 },
 {
+    "name":             "rtspUrl6",
+    "shortDesc": "Gimbal infrared RTSP URL",
+    "longDesc": "Independent gimbal infrared preview stream over MK22.",
+    "type":             "string",
+    "default":     "rtsp://192.168.2.36:8556/gimbal_ir"
+},
+{
     "name":             "tcpUrl",
     "shortDesc": "Video TCP Url",
     "longDesc":  "TCP url address and port to bind to for video stream. Example: 192.168.143.200:3001",

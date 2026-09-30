@@ -151,6 +151,7 @@ VideoManager::setToolbox(QGCToolbox *toolbox)
    connect(_videoSettings->rtspUrl3(),       &Fact::rawValueChanged, this, &VideoManager::_rtspUrl3Changed);
    connect(_videoSettings->rtspUrl4(),       &Fact::rawValueChanged, this, &VideoManager::_rtspUrl4Changed);
    connect(_videoSettings->rtspUrl5(),       &Fact::rawValueChanged, this, &VideoManager::_rtspUrl5Changed);
+   connect(_videoSettings->rtspUrl6(),       &Fact::rawValueChanged, this, &VideoManager::_rtspUrl6Changed);
    connect(_videoSettings->tcpUrl(),        &Fact::rawValueChanged, this, &VideoManager::_tcpUrlChanged);
    connect(_videoSettings->aspectRatio(),   &Fact::rawValueChanged, this, &VideoManager::_aspectRatioChanged);
    connect(_videoSettings->lowLatencyMode(),&Fact::rawValueChanged, this, &VideoManager::_lowLatencyModeChanged);
@@ -829,6 +830,12 @@ VideoManager::_rtspUrl5Changed()
     _restartVideo(4);
 }
 
+void
+VideoManager::_rtspUrl6Changed()
+{
+    _restartVideo(5);
+}
+
 //-----------------------------------------------------------------------------
 void
 VideoManager::_tcpUrlChanged()
@@ -929,6 +936,7 @@ VideoManager::_initVideo()
         "videoContent3",
         "videoContent4",
         "videoContent5",
+        "videoContent6",
     };
 
     for (int i = 0; i < kStreamCount; i++) {
@@ -991,7 +999,7 @@ VideoManager::_updateSettings(unsigned id)
 
     //-- Auto discovery
 
-    if(_activeVehicle && _activeVehicle->cameraManager()) {
+    if(id < 2 && _activeVehicle && _activeVehicle->cameraManager()) {
         QGCVideoStreamInfo* pInfo = _activeVehicle->cameraManager()->currentStreamInstance();
         if(pInfo) {
             if (id == 0) {
@@ -1065,6 +1073,7 @@ VideoManager::_updateSettings(unsigned id)
         else if(id == 2)    settingsChanged |= _updateVideoUri(id, _videoSettings->rtspUrl3()->rawValue().toString());
         else if(id == 3)    settingsChanged |= _updateVideoUri(id, _videoSettings->rtspUrl4()->rawValue().toString());
         else if(id == 4)    settingsChanged |= _updateVideoUri(id, _videoSettings->rtspUrl5()->rawValue().toString());
+        else if(id == 5)    settingsChanged |= _updateVideoUri(id, _videoSettings->rtspUrl6()->rawValue().toString());
 
     }
     else if (source == VideoSettings::videoSourceTCP)

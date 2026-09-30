@@ -19,3 +19,7 @@ for name in methods:
  result.append(source[m.start():pos])
 (here/'actual_methods.inc').write_text('\n\n'.join(result))
 print('Extracted',len(result),'actual production method bodies.')
+
+header=(root/"src/VideoManager/VideoManager.h").read_text()
+count=re.search(r"kStreamCount = (\d+)",header).group(1)
+(here/"stream_count.inc").write_text("static constexpr int kStreamCount="+count+";\n")

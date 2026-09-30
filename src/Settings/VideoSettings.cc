@@ -221,6 +221,19 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, rtspUrl5)
     return _rtspUrl5Fact;
 }
 
+DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, rtspUrl6)
+{
+    if (!_rtspUrl6Fact) {
+        _rtspUrl6Fact = _createSettingsFact(rtspUrl6Name);
+        // Fill empty gimbal infrared settings; preserve a user-configured URL.
+        if (_rtspUrl6Fact->rawValue().toString().trimmed().isEmpty()) {
+            _rtspUrl6Fact->setRawValue(_rtspUrl6Fact->rawDefaultValue());
+        }
+        connect(_rtspUrl6Fact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
+    }
+    return _rtspUrl6Fact;
+}
+
 DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, tcpUrl)
 {
     if (!_tcpUrlFact) {
@@ -257,12 +270,14 @@ bool VideoSettings::streamConfigured(void)
                                   << rtspUrl2()->rawValue().toString()
                                   << rtspUrl3()->rawValue().toString()
                                   << rtspUrl4()->rawValue().toString()
-                                  << rtspUrl5()->rawValue().toString();
+                                  << rtspUrl5()->rawValue().toString()
+                                  << rtspUrl6()->rawValue().toString();
         return !rtspUrl()->rawValue().toString().isEmpty() ||
                 !rtspUrl2()->rawValue().toString().isEmpty() ||
                 !rtspUrl3()->rawValue().toString().isEmpty() ||
                 !rtspUrl4()->rawValue().toString().isEmpty() ||
-                !rtspUrl5()->rawValue().toString().isEmpty();
+                !rtspUrl5()->rawValue().toString().isEmpty() ||
+                !rtspUrl6()->rawValue().toString().isEmpty();
     }
     //-- If TCP, check for URL
     if(vSource == videoSourceTCP) {

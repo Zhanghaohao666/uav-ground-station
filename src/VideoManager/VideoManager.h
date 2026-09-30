@@ -50,6 +50,7 @@ public:
     Q_PROPERTY(VideoReceiver*   videoReceiver3          READ    videoReceiver3                              CONSTANT)
     Q_PROPERTY(VideoReceiver*   videoReceiver4          READ    videoReceiver4                              CONSTANT)
     Q_PROPERTY(VideoReceiver*   videoReceiver5          READ    videoReceiver5                              CONSTANT)
+    Q_PROPERTY(VideoReceiver*   videoReceiver6          READ    videoReceiver6                              CONSTANT)
     Q_PROPERTY(double           aspectRatio             READ    aspectRatio                                 NOTIFY aspectRatioChanged)
     Q_PROPERTY(double           thermalAspectRatio      READ    thermalAspectRatio                          NOTIFY aspectRatioChanged)
     Q_PROPERTY(double           hfov                    READ    hfov                                        NOTIFY aspectRatioChanged)
@@ -100,6 +101,7 @@ public:
     virtual VideoReceiver*  videoReceiver3          () { return _videoReceiver[2]; }
     virtual VideoReceiver*  videoReceiver4          () { return _videoReceiver[3]; }
     virtual VideoReceiver*  videoReceiver5          () { return _videoReceiver[4]; }
+    virtual VideoReceiver*  videoReceiver6          () { return _videoReceiver[5]; }
 
 #if defined(QGC_DISABLE_UVC)
     virtual bool        uvcEnabled          () { return false; }
@@ -155,6 +157,7 @@ protected slots:
     void _rtspUrl3Changed            ();
     void _rtspUrl4Changed            ();
     void _rtspUrl5Changed            ();
+    void _rtspUrl6Changed            ();
     void _tcpUrlChanged             ();
     void _lowLatencyModeChanged     ();
     void _updateUVC                 ();
@@ -167,7 +170,7 @@ protected:
     friend class InitVideoSinks;
     friend class BindVideoSink;
 
-    static constexpr int kStreamCount = 5;
+    static constexpr int kStreamCount = 6;
 
     void _initVideo                 ();
     void _initVideoSink             (QQuickItem* widget, unsigned id);
@@ -190,24 +193,24 @@ protected:
     QString                 _imageFile;
     SubtitleWriter          _subtitleWriter;
     bool                    _isTaisync              = false;
-    VideoReceiver*          _videoReceiver[kStreamCount]       = { nullptr, nullptr, nullptr, nullptr, nullptr };
-    void*                   _videoSink[kStreamCount]           = { nullptr, nullptr, nullptr, nullptr, nullptr };
+    VideoReceiver*          _videoReceiver[kStreamCount]       = {};
+    void*                   _videoSink[kStreamCount]           = {};
     QString                 _videoUri[kStreamCount];
     // FIXME: AV: _videoStarted seems to be access from 3 different threads, from time to time
     // 1) Video Receiver thread
     // 2) Video Manager/main app thread
     // 3) Qt rendering thread (during video sink creation process which should happen in this thread)
     // It works for now but...
-    bool                    _videoStarted[kStreamCount]        = { false, false, false, false, false };
+    bool                    _videoStarted[kStreamCount]        = {};
     // User choice persists; visibility is temporary and never changes that choice.
-    bool                    _videoEnabled[kStreamCount]        = { false, false, false, false, false };
+    bool                    _videoEnabled[kStreamCount]        = {};
     bool                    _videoVisible[kStreamCount]        = {};
     bool                    _videoStarting[kStreamCount]       = {};
     bool                    _videoStopping[kStreamCount]       = {};
     QTimer*                 _videoRetryTimer[kStreamCount]     = {};
     QPointer<QQuickItem>     _videoSinkWidget[kStreamCount];
     bool                    _videoSuspended = false;
-    bool                    _lowLatencyStreaming[kStreamCount] = { false, false, false, false, false };
+    bool                    _lowLatencyStreaming[kStreamCount] = {};
     QAtomicInteger<bool>    _streaming              = false;
     QAtomicInteger<bool>    _decoding               = false;
     QAtomicInteger<bool>    _recording              = false;

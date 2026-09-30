@@ -70,28 +70,32 @@ Item {
         qsTr("Binocular camera stream"),
         qsTr("Forward short-focus camera stream"),
         qsTr("Forward long-focus camera stream"),
-        qsTr("Infrared thermal stream")
+        qsTr("算法板红外"),
+        qsTr("云台红外（预览）")
     ]
     readonly property var _videoObjectNames: [
         "videoContent",
         "thermalVideo",
         "videoContent3",
         "videoContent4",
-        "videoContent5"
+        "videoContent5",
+        "videoContent6"
     ]
     readonly property var _videoReceivers: [
         QGroundControl.videoManager.videoReceiver,
         QGroundControl.videoManager.thermalVideoReceiver,
         QGroundControl.videoManager.videoReceiver3,
         QGroundControl.videoManager.videoReceiver4,
-        QGroundControl.videoManager.videoReceiver5
+        QGroundControl.videoManager.videoReceiver5,
+        QGroundControl.videoManager.videoReceiver6
     ]
     readonly property var _videoRtspFacts: [
         QGroundControl.settingsManager.videoSettings.rtspUrl,
         QGroundControl.settingsManager.videoSettings.rtspUrl2,
         QGroundControl.settingsManager.videoSettings.rtspUrl3,
         QGroundControl.settingsManager.videoSettings.rtspUrl4,
-        QGroundControl.settingsManager.videoSettings.rtspUrl5
+        QGroundControl.settingsManager.videoSettings.rtspUrl5,
+        QGroundControl.settingsManager.videoSettings.rtspUrl6
     ]
     property string _videoConfigTitle: ""
     property var    _videoConfigFact:  null
@@ -299,7 +303,7 @@ Item {
             anchors.bottomMargin: mainHome._gap
 
             Repeater {
-                model: 5
+                model: root._videoItems.length
 
                 delegate: Loader {
                     property bool cardFullScreen: root._fullVideoStreamIndex === index
@@ -309,19 +313,15 @@ Item {
                     property var cardRtspFact: root._videoRtspFacts[index]
                     property int cardStreamIndex: index
 
-                    readonly property real _normalTopHeight: (videoArea.height - mainHome._gap) * 0.5
-                    readonly property real _normalBottomY: _normalTopHeight + mainHome._gap
-                    readonly property real _normalWidth: index < 2 ?
-                                                             (videoArea.width - mainHome._gap) / 2 :
-                                                             (videoArea.width - mainHome._gap * 2) / 3
-                    readonly property real _normalX: index < 2 ?
-                                                         index * (_normalWidth + mainHome._gap) :
-                                                         (index - 2) * (_normalWidth + mainHome._gap)
+                    readonly property real _normalHeight: (videoArea.height - mainHome._gap) / 2
+                    readonly property real _normalWidth: (videoArea.width - mainHome._gap * 2) / 3
+                    readonly property real _normalX: (index % 3) * (_normalWidth + mainHome._gap)
+                    readonly property real _normalY: Math.floor(index / 3) * (_normalHeight + mainHome._gap)
 
                     x:               cardFullScreen ? 0 : _normalX
-                    y:               cardFullScreen || index < 2 ? 0 : _normalBottomY
+                    y:               cardFullScreen ? 0 : _normalY
                     width:           cardFullScreen ? videoArea.width : _normalWidth
-                    height:          cardFullScreen ? videoArea.height : _normalTopHeight
+                    height:          cardFullScreen ? videoArea.height : _normalHeight
                     visible:         root._fullVideoStreamIndex < 0 || cardFullScreen
                     z:               cardFullScreen ? 10 : 0
                     sourceComponent: videoCardComponent
@@ -1707,7 +1707,7 @@ Item {
 
                     MouseArea {
                         anchors.fill: parent
-                        enabled: decoding && root._trackingInputMode !== 2
+                        enabled: streamIndex !== 5 && decoding && root._trackingInputMode !== 2
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton
                         cursorShape: root._trackingInputMode === 0 ? Qt.CrossCursor : Qt.SizeAllCursor

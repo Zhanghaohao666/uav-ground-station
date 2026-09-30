@@ -15,11 +15,16 @@ PASS   : DemandTests::urlChangedDuringStartUsesLatestAfterStop()
 PASS   : DemandTests::changingHiddenUrlDoesNotStart()
 PASS   : DemandTests::globalDisableAndBlankUrlsDoNotPull()
 QDEBUG : DemandTests::invalidStreamIdsAreIgnored() demand.tests: Unsupported receiver id -1
-QDEBUG : DemandTests::invalidStreamIdsAreIgnored() demand.tests: Unsupported receiver id 5
+QDEBUG : DemandTests::invalidStreamIdsAreIgnored() demand.tests: Unsupported receiver id 6
 PASS   : DemandTests::invalidStreamIdsAreIgnored()
 PASS   : DemandTests::hiddenParentStopsChildrenWithoutLosingSelection()
-QDEBUG : DemandTests::sinkIsReusedForSameFullscreenItem() demand.tests: video sink bound 0 QQuickItem(0x7ffc59d42dd0, parent=0x0, geometry=0,0 0x0) "" 0 0
+PASS   : DemandTests::oldFiveStreamPreferencesDoNotEnableNewStream()
+PASS   : DemandTests::gimbalInfraredChoicePersists()
+PASS   : DemandTests::sixthFullscreenStopsOthersAndRestores()
+PASS   : DemandTests::sixthCloseDuringConnectDoesNotRestart()
+PASS   : DemandTests::sixthHiddenRetryIsCancelled()
+QDEBUG : DemandTests::sinkIsReusedForSameFullscreenItem() demand.tests: video sink bound 0 QQuickItem(0x7ffcbd513e90, parent=0x0, geometry=0,0 0x0) "" 0 0
 PASS   : DemandTests::sinkIsReusedForSameFullscreenItem()
 PASS   : DemandTests::cleanupTestCase()
-Totals: 18 passed, 0 failed, 0 skipped, 0 blacklisted, 603ms
+Totals: 23 passed, 0 failed, 0 skipped, 0 blacklisted, 959ms
 ********* Finished testing of DemandTests *********

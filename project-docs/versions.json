@@ -38,5 +38,20 @@
     ],
     "tests": "18 项 Qt 隔离测试通过（含初始化/清理），QML 语法检查通过；未编译 Windows EXE。",
     "original_archive_sha256": "19a579739ea8f22998f2c78eed8171ec20980a48a05a5f2c560fdbb4c09365f0"
+  },
+  {
+    "tag": "v1.01.09-gimbal-ir",
+    "archive": "v1.01.09_fix_gimbal_tcp_mk22_gimbal_ir.zip",
+    "date": "2026-09-29",
+    "title": "六路视频与云台红外",
+    "testdir": "地面站云台红外_20260929",
+    "features": [
+      "继承按需拉流，从五路扩展到六路，三列两行。",
+      "第 6 路默认 rtsp://192.168.2.36:8556/gimbal_ir，独立开关、全屏及改地址。",
+      "云台红外只预览，禁用选点/框选跟踪；没有新增测温功能。",
+      "修复自动相机发现逻辑提前返回，避免第 3～6 路手动地址被忽略。"
+    ],
+    "tests": "23 项 Qt 隔离测试通过（含初始化/清理），QML/配置检查通过。板端红外实际抓帧验证不等于 Windows 地面站或远距离图传验收。",
+    "original_archive_sha256": "e12c88323df58cccba31a7f5a0752d72370cd126c89994585ddd0d30f9d6a90c"
   }
 ]
