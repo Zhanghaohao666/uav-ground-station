@@ -1,0 +1,162 @@
+<RCC>
+    <qresource prefix="/qml">
+        <file alias="XUI/qmldir">XUI/qmldir</file>
+        <file alias="XUI/XLabel.qml">XControls/XLabel.qml</file>
+        <file alias="XUI/XButton.qml">XControls/XButton.qml</file>
+        <file alias="XUI/XButtonColumnImageLabel.qml">XControls/XButtonColumnImageLabel.qml</file>
+        <file alias="XUI/XColoredImage.qml">XControls/XColoredImage.qml</file>
+        <file alias="XUI/XButtonImage.qml">XControls/XButtonImage.qml</file>
+        <file alias="XUI/XButtonImageRectangle.qml">XControls/XButtonImageRectangle.qml</file>
+        <file alias="XUI/XButtonLabel.qml">XControls/XButtonLabel.qml</file>
+        <file>XControls/XButtonRowImageLabel.qml</file>
+        <file>XControls/XHoverHoriButton.qml</file>
+        <file>XControls/XHoverVertButton.qml</file>
+        <file>XControls/XImageButton.qml</file>
+        <file>XControls/XInnerLabel.qml</file>
+        <file>XControls/XLabelImageRectangle.qml</file>
+        <file alias="XUI/XLabelOutline.qml">XControls/XLabelOutline.qml</file>
+        <file>XControls/XLabelRectangle.qml</file>
+        <file>XControls/XOutlineLabel.qml</file>
+        <file>XControls/XRctgLabelImage.qml</file>
+        <file>XControls/XSectionHeader.qml</file>
+        <file>XControls/XSlider.qml</file>
+        <file alias="XUI/XSliderSwitch.qml">XControls/XSliderSwitch.qml</file>
+        <file>XControls/XSpecialLabel.qml</file>
+        <file>XControls/XSubMenuButton.qml</file>
+        <file>XControls/XToolStrip.qml</file>
+        <file alias="XUI/XGlobalColor.qml">XSingletons/XGlobalColor.qml</file>
+        <file alias="XUI/XGlobalProperty.qml">XSingletons/XGlobalProperty.qml</file>
+        <file alias="XUI/XScreenTool.qml">XSingletons/XScreenTool.qml</file>
+        <file alias="XUI/XUI.qml">XUI/XUI.qml</file>
+        <file alias="XUI/XVideoCoordinateMapper.js">XUI/XVideoCoordinateMapper.js</file>
+        <file alias="XUI/XStatusBar.qml">XUI/XStatusBar.qml</file>
+        <file alias="XUI/XArtificialHorizon.qml">XUI/Dash/XArtificialHorizon.qml</file>
+        <file alias="XUI/XAttitudeWidget.qml">XUI/Dash/XAttitudeWidget.qml</file>
+        <file alias="XUI/XDashboard.qml">XUI/Dash/XDashboard.qml</file>
+        <file alias="XUI/XIntegratedAttitudeIndicator.qml">XUI/Dash/XIntegratedAttitudeIndicator.qml</file>
+        <file alias="XUI/XIntegratedCompassAttitude.qml">XUI/Dash/XIntegratedCompassAttitude.qml</file>
+        <file alias="XUI/XYawIndicator.qml">XUI/Dash/XYawIndicator.qml</file>
+        <file alias="XUI/XFlightControl.qml">XUI/XFlightControl.qml</file>
+        <file alias="XUI/XSetupPage.qml">XUI/Setting/XSetupPage.qml</file>
+        <file alias="XUI/XValues.qml">XUI/Setting/XValues.qml</file>
+        <file alias="XUI/XVideoSetting.qml">XUI/Setting/XVideoSetting.qml</file>
+        <file alias="XUI/XComboBoxLabelFact.qml">XControls/XComboBoxLabelFact.qml</file>
+        <file alias="XUI/XSwitchLabelFact.qml">XControls/XSwitchLabelFact.qml</file>
+        <file alias="XUI/XComboBoxFact.qml">XControls/XComboBoxFact.qml</file>
+        <file alias="XUI/XComboBox.qml">XControls/XComboBox.qml</file>
+        <file alias="XUI/XStatusIcon.qml">XControls/XStatusIcon.qml</file>
+        <file alias="XUI/XSwitch.qml">XControls/XSwitch.qml</file>
+        <file alias="XUI/XSetting.qml">XUI/Setting/XSetting.qml</file>
+        <file alias="XUI/XLinkSettings.qml">XUI/Setting/XLinkSettings.qml</file>
+        <file alias="XUI/XGeneralSetting.qml">XUI/Setting/XGeneralSetting.qml</file>
+        <file alias="XUI/XSafe.qml">XUI/Setting/XSafe.qml</file>
+        <file alias="XUI/XColorChart.qml">XUI/Setting/XColorChart.qml</file>
+        <file alias="XUI/XRTKBlueTooth.qml">XUI/Setting/XRTKBlueTooth.qml</file>
+        <file alias="XUI/XVersion.qml">XUI/Setting/XVersion.qml</file>
+        <file alias="XUI/XTextField.qml">XControls/XTextField.qml</file>
+        <file alias="XUI/XTextFieldFact.qml">XControls/XTextFieldFact.qml</file>
+        <file alias="XUI/XTextFieldLabelFact.qml">XControls/XTextFieldLabelFact.qml</file>
+        <file alias="XUI/XButtonColoredImageLabelRow.qml">XControls/XButtonColoredImageLabelRow.qml</file>
+        <file alias="XUI/XSingleValue.qml">XControls/XSingleValue.qml</file>
+        <file alias="XUI/XGimbal.qml">XUI/XGimbal.qml</file>
+        <file alias="XUI/Splash.qml">XUI/Splash.qml</file>
+        <file alias="XUI/XSwitchLabel.qml">XControls/XSwitchLabel.qml</file>
+        <file alias="XUI/XBatteryIndicator.qml">XUI/Values/XBatteryIndicator.qml</file>
+        <file alias="XUI/XDistanceIndicator.qml">XUI/Values/XDistanceIndicator.qml</file>
+        <file alias="XUI/XGPSIndicator.qml">XUI/Values/XGPSIndicator.qml</file>
+        <file alias="XUI/XMessageIndicator.qml">XUI/Values/XMessageIndicator.qml</file>
+        <file alias="XUI/XRangefinderIndicator.qml">XUI/Values/XRangefinderIndicator.qml</file>
+        <file alias="XUI/XSpeedIndicator.qml">XUI/Values/XSpeedIndicator.qml</file>
+        <file alias="XUI/XTelemetryRSSIIndicator.qml">XUI/Values/XTelemetryRSSIIndicator.qml</file>
+        <file alias="XUI/XHeightIndicator.qml">XUI/Values/XHeightIndicator.qml</file>
+    </qresource>
+    <qresource prefix="/image">
+        <file alias="xsetting">XImages/Setting/Setting.svg</file>
+        <file alias="CheckboxCheck.svg">XImages/Setting/CheckboxCheck.svg</file>
+        <file alias="Satellite.png">XImages/Map/Satellite.png</file>
+        <file alias="SatelliteStreet.png">XImages/Map/SatelliteStreet.png</file>
+        <file alias="Street.png">XImages/Map/Street.png</file>
+        <file alias="XLocation.png">XImages/Toolbar/XLocation.png</file>
+        <file alias="XBattery.png">XImages/Toolbar/XBattery.png</file>
+        <file alias="XBoat.png">XImages/Toolbar/XBoat.png</file>
+        <file alias="XBottom.png">XImages/Toolbar/XBottom.png</file>
+        <file alias="XHeight.png">XImages/Toolbar/XHeight.png</file>
+        <file alias="XSat.png">XImages/Toolbar/XSat.png</file>
+        <file alias="XSetting.png">XImages/Toolbar/XSetting.png</file>
+        <file alias="XSpeed.png">XImages/Toolbar/XSpeed.png</file>
+        <file alias="XTopline.png">XImages/Toolbar/XTopline.png</file>
+        <file alias="xlogo">XImages/Toolbar/XLogo.png</file>
+        <file alias="BottomLine.png">XImages/FlyView/BottomLine.png</file>
+        <file alias="Center.png">XImages/FlyView/Center.png</file>
+        <file alias="Triangle.png">XImages/FlyView/Triangle.png</file>
+        <file alias="Triangle.svg">XImages/FlyView/Triangle.svg</file>
+        <file alias="XHideway.png">XImages/FlyView/XHideway.png</file>
+        <file alias="XLineLeft.png">XImages/FlyView/XLineLeft.png</file>
+        <file alias="XLineRight.png">XImages/FlyView/XLineRight.png</file>
+        <file alias="XBack.svg">XImages/FlyView/XBack.svg</file>
+        <file alias="XAuto.svg">XImages/FlyView/XPlan.svg</file>
+        <file alias="XColor.png">XImages/Setting/XColor.png</file>
+        <file alias="XHelp.png">XImages/Setting/XHelp.png</file>
+        <file alias="XLink.png">XImages/Setting/XLink.png</file>
+        <file alias="XRTK.png">XImages/Setting/XRTK.png</file>
+        <file alias="XSafe.png">XImages/Setting/XSafe.png</file>
+        <file alias="XLogo2">XImages/XLogo.svg</file>
+        <file alias="Distance">XImages/PlanView/Distance.png</file>
+        <file alias="XAdd">XImages/PlanView/XAdd.png</file>
+        <file alias="XDelete">XImages/PlanView/XDelete.png</file>
+        <file alias="XDistance">XImages/PlanView/XDistance.png</file>
+        <file alias="XDistance2">XImages/PlanView/XDistance2.png</file>
+        <file alias="XOther">XImages/PlanView/XOther.png</file>
+        <file alias="XPlan1">XImages/PlanView/XPlan1.png</file>
+        <file alias="XPlan2">XImages/PlanView/XPlan2.png</file>
+        <file alias="XSave">XImages/PlanView/XSave.png</file>
+        <file alias="XSub">XImages/PlanView/XSub.png</file>
+        <file alias="XSurvey">XImages/PlanView/XSurvey.png</file>
+        <file alias="XTime">XImages/PlanView/XTime.png</file>
+        <file alias="Down">XImages/PlanView/Down.svg</file>
+        <file alias="UP">XImages/PlanView/UP.svg</file>
+        <file alias="WP2">XImages/PlanView/WP.png</file>
+        <file alias="AB">XImages/PlanView/AB.svg</file>
+        <file alias="XLogo3">XImages/XLogo3.png</file>
+        <file alias="Done">XImages/PlanView/Done.svg</file>
+        <file alias="Load">XImages/PlanView/Load.svg</file>
+        <file alias="Start">XImages/PlanView/Start.svg</file>
+        <file alias="WP">XImages/PlanView/WP.svg</file>
+        <file alias="DeleteLine">XImages/PlanView/DeleteLine.svg</file>
+        <file alias="Lock">XImages/Toolbar/lock.svg</file>
+        <file alias="Unlock">XImages/Toolbar/unlock.svg</file>
+        <file alias="Berth">XImages/FlyView/Berth.svg</file>
+        <file alias="XRule">XImages/FlyView/XRule.svg</file>
+        <file alias="StopStrart">XImages/FlyView/StopStrart.svg</file>
+        <file alias="XBack2">XImages/FlyView/XBack2.svg</file>
+        <file alias="Left">XImages/FlyView/DYT/Left.svg</file>
+        <file alias="Theme">XImages/Theme/theme3.png</file>
+        <file alias="Battery0">XImages/Battery0.svg</file>
+        <file alias="Battery1">XImages/Battery1.svg</file>
+        <file alias="Battery2">XImages/Battery2.svg</file>
+        <file alias="Battery3">XImages/Battery3.svg</file>
+        <file alias="Battery4">XImages/Battery4.svg</file>
+        <file alias="XDash">XImages/XDash.png</file>
+        <file alias="XRoll">XImages/XRoll.png</file>
+        <file alias="XBottomLine">XImages/XBottomLine.png</file>
+        <file alias="XDashBottom">XImages/XDashBottom.png</file>
+        <file alias="XDashLine">XImages/XDashLine.png</file>
+        <file alias="XDownload">XImages/XDownload.svg</file>
+        <file alias="XUpdate">XImages/XUpdate.svg</file>
+        <file alias="XyxwlLogo">XImages/XyxwlLogo.png</file>
+        <file alias="xarrow">XImages/New/xarrow.svg</file>
+        <file alias="xdash">XImages/New/xdash.png</file>
+        <file alias="xmap.png">XImages/New/xmap.svg</file>
+        <file alias="xrviz.png">XImages/New/xrviz.svg</file>
+        <file alias="xscript.png">XImages/New/xscript.svg</file>
+        <file alias="xswarm.png">XImages/New/xswarm.svg</file>
+        <file alias="xuav.png">XImages/New/xuav.png</file>
+        <file alias="xvideo.png">XImages/New/xvideo.svg</file>
+        <file alias="xleft">XImages/New/xleft.svg</file>
+        <file alias="xmode">XImages/New/xmode.png</file>
+        <file alias="xpower1">XImages/New/Power1.svg</file>
+        <file alias="xpower2">XImages/New/Power2.svg</file>
+        <file alias="xpower3">XImages/New/Power3.svg</file>
+        <file alias="xpower4">XImages/New/Power4.svg</file>
+    </qresource>
+</RCC>

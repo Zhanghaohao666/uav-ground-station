@@ -1,0 +1,14 @@
+[
+  {
+    "tag": "v1.01.09-base",
+    "archive": "v1.01.09_fix_gimbal_tcp.zip",
+    "date": "2026-09-28",
+    "title": "原始五路地面站",
+    "features": [
+      "导入用户提供的原始五路地面站源码，作为后续改动的基线。",
+      "保留现有飞行、视频、云台 TCP 和脚本入口；此标签不表示审查问题已修复。"
+    ],
+    "tests": "已做源码审查及部分 TCP 隔离复现，未验收完整 Windows 程序。",
+    "original_archive_sha256": "e8079033b3f2205d4631e33272aef7e21e09adda2aa62110b5d36b770d8cea72"
+  }
+]

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 26.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 39 39" style="enable-background:new 0 0 39 39;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#1FA9DA;}
+</style>
+<ellipse class="st0" cx="19.8" cy="32.2" rx="5.3" ry="1.4"/>
+<g>
+	<defs>
+		<path id="SVGID_1_" d="M21.2,23.8V9.2h7l-8.8-8.8l-8.8,8.8h7v14.6c0.4,0,0.7,0,1,0C19.5,23.8,19.8,23.8,21.2,23.8z"/>
+	</defs>
+	<use xlink:href="#SVGID_1_"  style="overflow:visible;fill:#1FA9DA;"/>
+	<clipPath id="SVGID_00000078010104047374432540000011184484375712646801_">
+		<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
+	</clipPath>
+</g>
+<path class="st0" d="M19.4,26.5c-10.6,0-19.2,2.7-19.2,6s8.6,6,19.2,6s19.3-2.7,19.3-6C38.6,29.2,30,26.5,19.4,26.5z M19.4,36
+	c-8.6,0-15.6-1.6-15.6-3.6c0-2,7-3.6,15.6-3.6S35,30.4,35,32.4C35,34.4,28,36,19.4,36z"/>
+</svg>

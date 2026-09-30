@@ -1,0 +1,107 @@
+Module XUI
+
+#===================== 控件 =====================
+##========Label========
+
+###Label
+XLabel          1.0 XLabel.qml
+###外发光字体
+XLabelOutline            1.0  XLabelOutline.qml
+
+##========Button========
+XButton                       1.0  XButton.qml
+XButtonLabel                  1.0  XButtonLabel.qml
+XButtonColoredImageLabelRow   1.0  XButtonColoredImageLabelRow.qml
+#纯图像按钮，Image + Mouse
+XButtonImage              1.0  XButtonImage.qml
+
+#图像在圆/方形中间的按钮, 图像为单色，基于 XColoredImage
+XButtonImageRectangle     1.0  XButtonImageRectangle.qml
+
+
+##========Image========
+XColoredImage   1.0 XColoredImage.qml
+
+XStatusIcon                1.0 XStatusIcon.qml
+XComboBox                  1.0 XComboBox.qml
+XComboBoxFact              1.0 XComboBoxFact.qml
+XComboBoxLabelFact         1.0 XComboBoxLabelFact.qml
+
+XSwitchLabelFact           1.0 XSwitchLabelFact.qml
+XSwitchLabel               1.0 XSwitchLabel.qml
+XSwitch                    1.0 XSwitch.qml
+
+XTextField                 1.0 XTextField.qml
+XTextFieldFact             1.0 XTextFieldFact.qml
+XTextFieldLabelFact        1.0 XTextFieldLabelFact.qml
+
+XSlider                    1.0 XSlider.qml
+XSliderSwitch              1.0 XSliderSwitch.qml
+
+XSingleValue                1.0 XSingleValue.qml
+
+#===================== 单例 =====================
+singleton XGlobalProperty   1.0   XGlobalProperty.qml
+singleton XGlobalColor      1.0	XGlobalColor.qml
+singleton XScreenTool      1.0   XScreenTool.qml
+
+#====================== 实例 =======================
+XUI     1.0 XUI.qml
+Splash  1.0 Splash.qml
+XStatusBar 1.0 XStatusBar.qml
+XFlyView 1.0 XFlyView.qml
+#Setting
+XFlightControl 1.0 XFlightControl.qml
+
+## 设置
+XSetting       1.0 XSetting.qml
+XGeneralSetting 1.0 XGeneralSetting.qml
+XLinkSettings 1.0 XLinkSettings.qml
+XSafe         1.0 XSafe.qml
+XColorChart   1.0 XColorChart.qml
+XRTKBlueTooth 1.0 XRTKBlueTooth.qml
+XVersion      1.0 XVersion.qml
+
+##
+
+XSetupPage     1.0 XSetupPage.qml
+XValues        1.0 XValues.qml
+XVersion       1.0 XVersion.qml
+XVideoSetting  1.0 XVideoSetting.qml
+## 控制
+XFlightControl 1.0 XFlightControl.qml
+## 仪表
+XArtificialHorizon 1.0 XArtificialHorizon.qml
+XAttitudeWidget 1.0 XAttitudeWidget.qml
+XDashboard 1.0 XDashboard.qml
+XIntegratedAttitudeIndicator 1.0 XIntegratedAttitudeIndicator.qml
+XIntegratedCompassAttitude 1.0 XIntegratedCompassAttitude.qml
+XYawIndicator 1.0 XYawIndicator.qml
+#云台
+XGimbal       1.0 XGimbal.qml
+
+##值--Value
+XBatteryIndicator 1.0 XBatteryIndicator.qml
+XDistanceIndicator 1.0 XDistanceIndicator.qml
+XGPSIndicator      1.0 XGPSIndicator.qml
+XMessageIndicator  1.0 XMessageIndicator.qml
+XRangefinderIndicator 1.0 XRangefinderIndicator.qml
+XSpeedIndicator    1.0 XSpeedIndicator.qml
+XTelemetryRSSIIndicator 1.0 XTelemetryRSSIIndicator.qml
+XHeightIndicator        1.0 XHeightIndicator.qml
+
+#测试
+QmlTest 1.0 QmlTest.qml
+
+#Button_Image			   1.0 Button_Image.qml
+#Button_ImageLabel		   1.0 Button_ImageLabel.qml
+#Button_Label			   1.0 Button_Label.qml
+#Button_Column_ImageLabel   1.0 Button_Column_ImageLabel.qml
+#Button_Row_ImageLabel      1.0 Button_Row_ImageLabel.qml
+#XSlider  1.0   XSlider.qml
+#XRectangleLabel 1.0 XRectangleLabel.qml
+#XImageButton    1.0 XImageButton.qml
+#XSubMenuButton  1.0 XSubMenuButton.qml
+#ButtonImageLabel 1.0 ButtonImageLabel.qml
+
+
