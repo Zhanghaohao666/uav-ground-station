@@ -120,27 +120,10 @@ Item {
         return (small < 10 ? "0" + small : small) + ":" + (sec < 10 ? "0" + sec : sec)
     }
 
-    function requestInitVideoSinks() {
-        initVideoSinksTimer.restart()
-    }
-
     on_SelectedNavIndexChanged: {
         if (_selectedNavIndex !== 0) {
             _fullVideoStreamIndex = -1
         }
-    }
-
-    on_FullVideoStreamIndexChanged: {
-        if (_fullVideoStreamIndex < 0) {
-            requestInitVideoSinks()
-        }
-    }
-
-    Timer {
-        id:       initVideoSinksTimer
-        interval: 0
-        repeat:   false
-        onTriggered: QGroundControl.videoManager.initVideoSinks()
     }
 
     PlanMasterController {
@@ -1562,9 +1545,26 @@ Item {
                 property real selectionFeedbackHeight: 0
                 property string selectionFeedbackText: ""
 
-                onFullScreenCardChanged: bindVideoSinkTimer.restart()
+                readonly property bool streamRequested:
+                    streamIndex >= 0 && (QGroundControl.videoManager.requestedStreamMask & (1 << streamIndex)) !== 0
+                property bool demandReady: false
+
+                function updateStreamVisibility() {
+                    if (!demandReady || streamIndex < 0) return
+                    QGroundControl.videoManager.setVideoStreamVisible(streamIndex, visible)
+                    if (visible) bindVideoSinkTimer.restart()
+                }
+                onVisibleChanged: updateStreamVisibility()
+                Component.onCompleted: {
+                    demandReady = true
+                    updateStreamVisibility()
+                }
+                Component.onDestruction: {
+                    QGroundControl.videoManager.setVideoStreamVisible(streamIndex, false)
+                }
 
                 function bindVideoSink() {
+                    if (!visible) return
                     if (videoBackground.width > 0 && videoBackground.height > 0) {
                         QGroundControl.videoManager.bindVideoSink(videoBackground, streamIndex)
                     } else {
@@ -1574,7 +1574,7 @@ Item {
 
                 function startCurrentStream() {
                     bindVideoSink()
-                    startVideoTimer.restart()
+                    QGroundControl.videoManager.startVideoStream(streamIndex)
                 }
 
                 function showSelectionFeedback(text, kind, x, y, width, height) {
@@ -1619,6 +1619,18 @@ Item {
                     Component.onCompleted: {
                         console.log("Video created with objectName:", objectName)
                         bindVideoSinkTimer.start()
+                    }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    visible: !streamRequested || !decoding
+                    color: "#D010151B"
+                    z: 1.5
+                    XLabel {
+                        anchors.centerIn: parent
+                        text: streamRequested ? qsTr("Waiting for video") : qsTr("Video closed")
+                        color: XGlobalColor.label2
                     }
                 }
 
@@ -1810,13 +1822,6 @@ Item {
                     onTriggered: bindVideoSink()
                 }
 
-                Timer {
-                    id:       startVideoTimer
-                    interval: 150
-                    repeat:   false
-                    onTriggered: QGroundControl.videoManager.startVideoStream(streamIndex)
-                }
-
                 Connections {
                     target: receiver
                     ignoreUnknownSignals: true
@@ -1883,6 +1888,7 @@ Item {
                         hoverEnabled: true
                         cursorShape:  Qt.PointingHandCursor
                         onClicked: {
+                            if (!fullScreenCard) startCurrentStream()
                             root._fullVideoStreamIndex = fullScreenCard ? -1 : streamIndex
                         }
                     }
@@ -1935,6 +1941,7 @@ Item {
                         XButtonLabel {
                             id:                   startVideoButton
                             text:                 qsTr("Open")
+                            enabled:              !streamRequested || !decoding
                             anchors.verticalCenter:     parent.verticalCenter
                             _min:              true
                             _marginwidth:           _margin / 3
@@ -1945,6 +1952,7 @@ Item {
                         }
                         XButtonLabel {
                             text:                 qsTr("Close")
+                            enabled:              streamRequested
                             anchors.verticalCenter:     parent.verticalCenter
                             _min:              true
                             _marginwidth:           _margin / 3

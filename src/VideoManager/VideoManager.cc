@@ -137,6 +137,12 @@ VideoManager::setToolbox(QGCToolbox *toolbox)
 
    // TODO: Those connections should be Per Video, not per VideoManager.
    _videoSettings = toolbox->settingsManager()->videoSettings();
+   _loadRequestedStreams();
+   connect(_videoSettings->streamEnabled(), &Fact::rawValueChanged, this, [this]() {
+       for (int i = 0; i < kStreamCount; ++i) {
+           _syncReceiver(i);
+       }
+   });
    QString videoSource = _videoSettings->videoSource()->rawValue().toString();
    connect(_videoSettings->videoSource(),   &Fact::rawValueChanged, this, &VideoManager::_videoSourceChanged);
    connect(_videoSettings->udpPort(),       &Fact::rawValueChanged, this, &VideoManager::_udpPortChanged);
@@ -174,36 +180,17 @@ VideoManager::setToolbox(QGCToolbox *toolbox)
             emit streamingChanged();
         });
 
-        int index = idx;  // 必须中间用一个临时变量
-        connect(_videoReceiver[idx], &VideoReceiver::onStartComplete, this, [this, index](VideoReceiver::STATUS status) {
-            qCDebug(VideoManagerLog) << "Video 0 Start complete, status: " << status;
-            if (status == VideoReceiver::STATUS_OK) {
-                _videoStarted[index] = true;
-                if (_videoSink[index] != nullptr) {
-                    qCDebug(VideoManagerLog) << "Video 0 start decoding";
-                    // It is absolutely ok to have video receiver active (streaming) and decoding not active
-                    // It should be handy for cases when you have many streams and want to show only some of them
-                    // NOTE that even if decoder did not start it is still possible to record video
-                    _videoReceiver[index]->startDecoding(_videoSink[index]);
-                }
-            } else if (status == VideoReceiver::STATUS_INVALID_URL) {
-                // Invalid URL - don't restart
-            } else if (status == VideoReceiver::STATUS_INVALID_STATE) {
-                // Already running
-            } else {
-                _restartVideo(index);
-            }
+        const int index = idx;
+        _videoRetryTimer[index] = new QTimer(this);
+        _videoRetryTimer[index]->setSingleShot(true);
+        _videoRetryTimer[index]->setInterval(3000);
+        connect(_videoRetryTimer[index], &QTimer::timeout, this, [this, index]() {
+            _syncReceiver(index);
         });
-
-        connect(_videoReceiver[idx], &VideoReceiver::onStopComplete, this, [this, index](VideoReceiver::STATUS status) {
-            qCDebug(VideoManagerLog) << "Video 0 Stop complete, status: " << status;
-            _videoStarted[index] = false;
-            if (status == VideoReceiver::STATUS_INVALID_URL) {
-                qCDebug(VideoManagerLog) << "Invalid video URL. Not restarting";
-            } else if (_videoEnabled[index]) {
-                _startReceiver(index);
-            }
-        });
+        connect(_videoReceiver[idx], &VideoReceiver::onStartComplete, this,
+                [this, index](VideoReceiver::STATUS status) { _handleStartComplete(index, status); });
+        connect(_videoReceiver[idx], &VideoReceiver::onStopComplete, this,
+                [this, index](VideoReceiver::STATUS status) { _handleStopComplete(index, status); });
 
         connect(_videoReceiver[idx], &VideoReceiver::decodingChanged, this, [this](bool active){
             qCDebug(VideoManagerLog) << "Video 0 decoding changed, active: " << (active ? "yes" : "no");
@@ -388,12 +375,9 @@ VideoManager::startVideo()
         return;
     }
 
-    // _startReceiver(0);
-    // _startReceiver(1);
-
-    for(int i=0; i < kStreamCount; i++) {
-        _videoEnabled[i] = true;
-        _startReceiver(i);
+    _videoSuspended = false;
+    for (int i = 0; i < kStreamCount; i++) {
+        _syncReceiver(i);
     }
 }
 
@@ -410,14 +394,15 @@ VideoManager::startVideoStream(int id)
     }
 
 #if defined(QGC_GST_STREAMING)
-    initVideoSinks();
     _videoEnabled[id] = true;
+    _saveRequestedStreams();
+    _videoSuspended = false;
     _videoSettings->streamEnabled()->setRawValue(true);
     if (_videoSettings->videoSource()->rawValue().toString() != VideoSettings::videoSourceRTSP) {
         _videoSettings->videoSource()->setRawValue(VideoSettings::videoSourceRTSP);
     }
     _updateSettings(static_cast<unsigned>(id));
-    _startReceiver(static_cast<unsigned>(id));
+    _syncReceiver(static_cast<unsigned>(id));
 #else
     Q_UNUSED(id)
 #endif
@@ -431,9 +416,9 @@ VideoManager::stopVideo()
         return;
     }
 
-    for(int i = kStreamCount - 1; i >= 0; i--) {
-        _videoEnabled[i] = false;
-        _stopReceiver(i);
+    _videoSuspended = true;
+    for (int i = kStreamCount - 1; i >= 0; i--) {
+        _syncReceiver(i);
     }
 }
 
@@ -450,7 +435,92 @@ VideoManager::stopVideoStream(int id)
     }
 
     _videoEnabled[id] = false;
-    _stopReceiver(static_cast<unsigned>(id));
+    _saveRequestedStreams();
+    _syncReceiver(static_cast<unsigned>(id));
+}
+
+int VideoManager::requestedStreamMask() const
+{
+    int mask = 0;
+    for (int i = 0; i < kStreamCount; ++i) {
+        if (_videoEnabled[i]) mask |= 1 << i;
+    }
+    return mask;
+}
+
+void VideoManager::_loadRequestedStreams()
+{
+    const int mask = QSettings().value("VideoDemand/requestedStreamMask", 1).toInt();
+    for (int i = 0; i < kStreamCount; ++i) {
+        _videoEnabled[i] = (mask & (1 << i)) != 0;
+    }
+}
+
+void VideoManager::_saveRequestedStreams()
+{
+    QSettings().setValue("VideoDemand/requestedStreamMask", requestedStreamMask());
+    emit requestedStreamMaskChanged();
+}
+
+void VideoManager::setVideoStreamVisible(int id, bool visible)
+{
+    if (id < 0 || id >= kStreamCount) return;
+    _videoVisible[id] = visible;
+    _syncReceiver(static_cast<unsigned>(id));
+}
+
+bool VideoManager::_receiverWanted(unsigned id) const
+{
+    return id < static_cast<unsigned>(kStreamCount) && _videoSettings &&
+           !_videoSuspended && _videoEnabled[id] && _videoVisible[id] &&
+           _videoSettings->streamEnabled()->rawValue().toBool() &&
+           _videoSettings->videoSource()->rawValue().toString() != VideoSettings::videoDisabled &&
+           _videoSettings->videoSource()->rawValue().toString() != VideoSettings::videoSourceNoVideo &&
+           !_videoUri[id].trimmed().isEmpty();
+}
+
+void VideoManager::_syncReceiver(unsigned id)
+{
+    if (id >= static_cast<unsigned>(kStreamCount)) return;
+    if (_receiverWanted(id)) {
+        _startReceiver(id);
+    } else {
+        if (_videoRetryTimer[id]) _videoRetryTimer[id]->stop();
+        _stopReceiver(id);
+    }
+}
+
+void VideoManager::_handleStartComplete(unsigned id, VideoReceiver::STATUS status)
+{
+    _videoStarting[id] = false;
+    if (status == VideoReceiver::STATUS_OK || status == VideoReceiver::STATUS_INVALID_STATE) {
+        _videoStarted[id] = true;
+        // Visibility may have changed while the receiver was starting.
+        if (!_receiverWanted(id)) {
+            _stopReceiver(id);
+        } else if (!_videoStopping[id] && _videoSink[id] != nullptr) {
+            _videoReceiver[id]->startDecoding(_videoSink[id]);
+        }
+    } else if (!_videoStopping[id] && status != VideoReceiver::STATUS_INVALID_URL &&
+               _receiverWanted(id) && _videoRetryTimer[id]) {
+        _videoRetryTimer[id]->start();
+    }
+}
+
+void VideoManager::_handleStopComplete(unsigned id, VideoReceiver::STATUS status)
+{
+    const bool requestedStop = _videoStopping[id];
+    _videoStarted[id] = false;
+    _videoStarting[id] = false;
+    _videoStopping[id] = false;
+    if (status != VideoReceiver::STATUS_INVALID_URL && _receiverWanted(id)) {
+        if (requestedStop) {
+            _startReceiver(id);
+        } else if (_videoRetryTimer[id]) {
+            // Back off after a network failure; never revive a hidden/closed stream.
+            _videoRetryTimer[id]->start();
+        }
+    }
 }
 
 void
@@ -710,9 +780,6 @@ void
 VideoManager::_videoSourceChanged()
 {
     _updateUVC();
-    for (int i = 0; i < kStreamCount; i++) {
-        _updateSettings(i);
-    }
     emit hasVideoChanged();
     emit isGStreamerChanged();
     emit isUvcChanged();
@@ -720,7 +787,10 @@ VideoManager::_videoSourceChanged()
     if (hasVideo()) {
         _restartAllVideos();
     } else {
-        stopVideo();
+        for (int i = 0; i < kStreamCount; ++i) {
+            _updateSettings(i);
+            _syncReceiver(i);
+        }
     }
 }
 
@@ -881,15 +951,20 @@ VideoManager::_initVideoSink(QQuickItem* widget, unsigned id)
         return;
     }
 
+    // Fullscreen changes geometry of the same item; reuse its sink.
+    if (_videoSink[id] != nullptr && _videoSinkWidget[id] == widget) {
+        return;
+    }
     if (_videoSink[id] != nullptr) {
         GStreamer::releaseVideoSink(_videoSink[id]);
         _videoSink[id] = nullptr;
     }
 
+    _videoSinkWidget[id] = widget;
     _videoSink[id] = qgcApp()->toolbox()->corePlugin()->createVideoSink(this, widget);
     if (_videoSink[id] != nullptr) {
         qCDebug(VideoManagerLog) << "video sink bound" << id << widget << widget->objectName() << widget->width() << widget->height();
-        if (_videoStarted[id]) {
+        if (_videoStarted[id] && !_videoStopping[id]) {
             _videoReceiver[id]->startDecoding(_videoSink[id]);
         }
     } else {
@@ -1068,29 +1143,14 @@ VideoManager::_restartVideo(unsigned id)
         return;
     }
 
-    bool oldLowLatencyStreaming = _lowLatencyStreaming[id];
-    QString oldUri = _videoUri[id];
-    _updateSettings(id);
-    bool newLowLatencyStreaming = _lowLatencyStreaming[id];
-    QString newUri = _videoUri[id];
-    qCDebug(VideoManagerLog) << "New Video URI " << newUri;
-    // FIXME: AV: use _updateSettings() result to check if settings were changed
-    if (_videoStarted[id] && oldUri == newUri && oldLowLatencyStreaming == newLowLatencyStreaming) {
-        qCDebug(VideoManagerLog) << "No sense to restart video streaming, skipped"  << id;
-        return;
-    }
-
-    qCDebug(VideoManagerLog) << "Restart video streaming"  << id;
-
-    if (!_videoEnabled[id]) {
-        qCDebug(VideoManagerLog) << "Video stream is disabled, restart skipped" << id;
-        return;
-    }
-
-    if (_videoStarted[id]) {
+    const bool settingsChanged = _updateSettings(id);
+    if (!_receiverWanted(id)) {
+        _syncReceiver(id);
+    } else if (settingsChanged && (_videoStarted[id] || _videoStarting[id])) {
+        // Stop completion starts the latest URI only if it is still wanted.
         _stopReceiver(id);
     } else {
-        _startReceiver(id);
+        _syncReceiver(id);
     }
 #endif
 }
@@ -1111,19 +1171,16 @@ void
 VideoManager::_startReceiver(unsigned id)
 {
 #if defined(QGC_GST_STREAMING)
-    const QString source = _videoSettings->videoSource()->rawValue().toString();
-    const unsigned rtsptimeout = _videoSettings->rtspTimeout()->rawValue().toUInt();
-    /* The gstreamer rtsp source will switch to tcp if udp is not available after 5 seconds.
-       So we should allow for some negotiation time for rtsp */
-    const unsigned timeout = (source == VideoSettings::videoSourceRTSP ? rtsptimeout : 2 );
-
-    if (id >= static_cast<unsigned>(kStreamCount)) {
-        qCDebug(VideoManagerLog) << "Unsupported receiver id" << id;
-    } else if (_videoReceiver[id] != nullptr/* && _videoSink[id] != nullptr*/) {
-        if (!_videoUri[id].isEmpty()) {
-            _videoReceiver[id]->start(_videoUri[id], timeout, _lowLatencyStreaming[id] ? -1 : 0);
-        }
+    if (!_receiverWanted(id) || _videoReceiver[id] == nullptr ||
+        _videoStarted[id] || _videoStarting[id] || _videoStopping[id] ||
+        (_videoRetryTimer[id] && _videoRetryTimer[id]->isActive())) {
+        return;
     }
+    const QString source = _videoSettings->videoSource()->rawValue().toString();
+    const unsigned timeout = source == VideoSettings::videoSourceRTSP
+            ? _videoSettings->rtspTimeout()->rawValue().toUInt() : 2;
+    _videoStarting[id] = true;
+    _videoReceiver[id]->start(_videoUri[id], timeout, _lowLatencyStreaming[id] ? -1 : 0);
 #else
     Q_UNUSED(id);
 #endif
@@ -1134,11 +1191,12 @@ void
 VideoManager::_stopReceiver(unsigned id)
 {
 #if defined(QGC_GST_STREAMING)
-    if (id >= static_cast<unsigned>(kStreamCount)) {
-        qCDebug(VideoManagerLog) << "Unsupported receiver id" << id;
-    } else if (_videoReceiver[id] != nullptr) {
-        _videoReceiver[id]->stop();
+    if (id >= static_cast<unsigned>(kStreamCount) || !_videoReceiver[id] ||
+        _videoStopping[id] || (!_videoStarted[id] && !_videoStarting[id])) {
+        return;
     }
+    _videoStopping[id] = true;
+    _videoReceiver[id]->stop();
 #else
     Q_UNUSED(id);
 #endif

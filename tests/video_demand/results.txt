@@ -1,0 +1,25 @@
+********* Start testing of DemandTests *********
+Config: Using QtTest library 5.15.3, Qt 5.15.3 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.3.0), ubuntu 22.04
+PASS   : DemandTests::initTestCase()
+PASS   : DemandTests::startupDoesNotPullHiddenStreams()
+PASS   : DemandTests::fullScreenStopsOtherSubscriptionsAndRestores()
+PASS   : DemandTests::closedStreamStaysClosedAfterPageRoundTrip()
+PASS   : DemandTests::closeDuringStartRejectsLateCompletion()
+PASS   : DemandTests::rapidReopenWaitsForStop()
+PASS   : DemandTests::repeatedShowAndOpenAreIdempotent()
+PASS   : DemandTests::failedStartBacksOffAndHiddenCancelsRetry()
+PASS   : DemandTests::visibleNetworkFailureReconnects()
+PASS   : DemandTests::stopAllPersistsChoiceButPreventsReconnect()
+PASS   : DemandTests::preferencesPersistIncludingAllClosed()
+PASS   : DemandTests::urlChangedDuringStartUsesLatestAfterStop()
+PASS   : DemandTests::changingHiddenUrlDoesNotStart()
+PASS   : DemandTests::globalDisableAndBlankUrlsDoNotPull()
+QDEBUG : DemandTests::invalidStreamIdsAreIgnored() demand.tests: Unsupported receiver id -1
+QDEBUG : DemandTests::invalidStreamIdsAreIgnored() demand.tests: Unsupported receiver id 5
+PASS   : DemandTests::invalidStreamIdsAreIgnored()
+PASS   : DemandTests::hiddenParentStopsChildrenWithoutLosingSelection()
+QDEBUG : DemandTests::sinkIsReusedForSameFullscreenItem() demand.tests: video sink bound 0 QQuickItem(0x7ffc59d42dd0, parent=0x0, geometry=0,0 0x0) "" 0 0
+PASS   : DemandTests::sinkIsReusedForSameFullscreenItem()
+PASS   : DemandTests::cleanupTestCase()
+Totals: 18 passed, 0 failed, 0 skipped, 0 blacklisted, 603ms
+********* Finished testing of DemandTests *********

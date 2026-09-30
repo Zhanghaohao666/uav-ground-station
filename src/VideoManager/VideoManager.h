@@ -16,6 +16,7 @@
 #include <QTime>
 #include <QUrl>
 #include <QQuickItem>
+#include <QPointer>
 
 #include "QGCMAVLink.h"
 #include "QGCLoggingCategory.h"
@@ -112,6 +113,10 @@ public:
     // Override from QGCTool
     virtual void        setToolbox          (QGCToolbox *toolbox);
 
+    Q_PROPERTY(int requestedStreamMask READ requestedStreamMask NOTIFY requestedStreamMaskChanged)
+    int requestedStreamMask() const;
+    Q_INVOKABLE void setVideoStreamVisible(int id, bool visible);
+
     Q_INVOKABLE void startVideo     ();
     Q_INVOKABLE void stopVideo      ();
     Q_INVOKABLE void startVideoStream(int id);
@@ -125,6 +130,7 @@ public:
     Q_INVOKABLE void grabImage(const QString& imageFile = QString());
 
 signals:
+    void requestedStreamMaskChanged();
     void hasVideoChanged            ();
     void isGStreamerChanged         ();
     void isUvcChanged               ();
@@ -170,6 +176,12 @@ protected:
     void _cleanupOldVideos          ();
     void _restartAllVideos          ();
     void _restartVideo              (unsigned id);
+    bool _receiverWanted(unsigned id) const;
+    void _syncReceiver(unsigned id);
+    void _loadRequestedStreams();
+    void _saveRequestedStreams();
+    void _handleStartComplete(unsigned id, VideoReceiver::STATUS status);
+    void _handleStopComplete(unsigned id, VideoReceiver::STATUS status);
     void _startReceiver             (unsigned id);
     void _stopReceiver              (unsigned id);
 
@@ -187,7 +199,14 @@ protected:
     // 3) Qt rendering thread (during video sink creation process which should happen in this thread)
     // It works for now but...
     bool                    _videoStarted[kStreamCount]        = { false, false, false, false, false };
+    // User choice persists; visibility is temporary and never changes that choice.
     bool                    _videoEnabled[kStreamCount]        = { false, false, false, false, false };
+    bool                    _videoVisible[kStreamCount]        = {};
+    bool                    _videoStarting[kStreamCount]       = {};
+    bool                    _videoStopping[kStreamCount]       = {};
+    QTimer*                 _videoRetryTimer[kStreamCount]     = {};
+    QPointer<QQuickItem>     _videoSinkWidget[kStreamCount];
+    bool                    _videoSuspended = false;
     bool                    _lowLatencyStreaming[kStreamCount] = { false, false, false, false, false };
     QAtomicInteger<bool>    _streaming              = false;
     QAtomicInteger<bool>    _decoding               = false;
