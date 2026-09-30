@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import Qt.labs.settings 1.0
 import QGroundControl 1.0
 import QGroundControl.Controllers 1.0
 import QGroundControl.Controls 1.0
@@ -11,6 +12,7 @@ import QGroundControl.ScreenTools 1.0
 
 import XUI 1.0
 import "XVideoCoordinateMapper.js" as VideoCoordinateMapper
+import "XVideoProfiles.js" as VideoProfiles
 
 Item {
     id: root
@@ -65,7 +67,30 @@ Item {
         { "label": "RViz",     "icon": "qrc:/image/xrviz.png" },
         { "label": qsTr("Script Customization"), "icon": "qrc:/image/xscript.png" }
     ]
-    readonly property var _videoItems: [
+    Settings {
+        id: videoProfileSettings
+        category: "VideoProfiles"
+        property string selectedMode: "custom"
+    }
+    readonly property var _selectedVideoProfile: VideoProfiles.profile(videoProfileSettings.selectedMode)
+    readonly property int _profileStreamCount: _selectedVideoProfile ? _selectedVideoProfile.count : 6
+    readonly property int _videoColumns: _profileStreamCount === 4 ? 2 : 3
+    property bool _applyingVideoProfile: false
+    function applyVideoProfile(mode) {
+        if (_applyingVideoProfile) return
+        _applyingVideoProfile = true
+        try {
+            VideoProfiles.apply(mode, QGroundControl.videoManager, root._videoRtspFacts, function(selected) {
+                // Keep a shared-camera full screen untouched. A payload full
+                // screen exits so all newly selected payload views are visible.
+                if (root._fullVideoStreamIndex >= 2) root._fullVideoStreamIndex = -1
+                videoProfileSettings.selectedMode = selected
+            })
+        } finally {
+            _applyingVideoProfile = false
+        }
+    }
+    readonly property var _videoItems: _selectedVideoProfile ? _selectedVideoProfile.titles : [
         qsTr("Downward global camera stream"),
         qsTr("Binocular camera stream"),
         qsTr("Forward short-focus camera stream"),
@@ -290,11 +315,51 @@ Item {
             }
         }
 
+        Rectangle {
+            id: videoProfileBar
+            visible: root._selectedNavIndex === 0
+            anchors.top: parent.top
+            anchors.topMargin: mainHome._contentTop
+            anchors.left: leftNav.right
+            anchors.leftMargin: mainHome._gap
+            anchors.right: rightPanel.left
+            anchors.rightMargin: mainHome._gap
+            height: Math.max(_margin * 2.8, 40)
+            radius: 6
+            color: XGlobalColor.background2
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: mainHome._gap
+                spacing: mainHome._gap
+                XLabel {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: qsTr("视频方案")
+                    color: XGlobalColor.label2
+                }
+                Repeater {
+                    model: [{label: "云台方案", mode: "gimbal"}, {label: "算法板方案", mode: "algorithm"}]
+                    delegate: XButtonLabel {
+                        text: modelData.label
+                        enabled: !root._applyingVideoProfile
+                        _theme: videoProfileSettings.selectedMode === modelData.mode ? XGlobalColor.theme2 : XGlobalColor.theme
+                        onClicked: root.applyVideoProfile(modelData.mode)
+                    }
+                }
+                XLabel {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: videoProfileSettings.selectedMode === "custom" ? qsTr("当前：自定义地址") : qsTr("默认 MK22 地址；下视、D455i 保持原设置")
+                    color: XGlobalColor.label2
+                    small: true
+                }
+            }
+        }
+
         Item {
             id:                 videoArea
             visible:            root._selectedNavIndex === 0
-            anchors.top:        parent.top
-            anchors.topMargin:  mainHome._contentTop
+            anchors.top:        videoProfileBar.bottom
+            anchors.topMargin:  mainHome._gap
             anchors.left:       leftNav.right
             anchors.leftMargin: mainHome._gap
             anchors.right:      rightPanel.left
@@ -303,7 +368,7 @@ Item {
             anchors.bottomMargin: mainHome._gap
 
             Repeater {
-                model: root._videoItems.length
+                model: 6 // Fixed delegate count preserves shared camera sinks across presets.
 
                 delegate: Loader {
                     property bool cardFullScreen: root._fullVideoStreamIndex === index
@@ -314,15 +379,15 @@ Item {
                     property int cardStreamIndex: index
 
                     readonly property real _normalHeight: (videoArea.height - mainHome._gap) / 2
-                    readonly property real _normalWidth: (videoArea.width - mainHome._gap * 2) / 3
-                    readonly property real _normalX: (index % 3) * (_normalWidth + mainHome._gap)
-                    readonly property real _normalY: Math.floor(index / 3) * (_normalHeight + mainHome._gap)
+                    readonly property real _normalWidth: (videoArea.width - mainHome._gap * (root._videoColumns - 1)) / root._videoColumns
+                    readonly property real _normalX: (index % root._videoColumns) * (_normalWidth + mainHome._gap)
+                    readonly property real _normalY: Math.floor(index / root._videoColumns) * (_normalHeight + mainHome._gap)
 
                     x:               cardFullScreen ? 0 : _normalX
                     y:               cardFullScreen ? 0 : _normalY
                     width:           cardFullScreen ? videoArea.width : _normalWidth
                     height:          cardFullScreen ? videoArea.height : _normalHeight
-                    visible:         root._fullVideoStreamIndex < 0 || cardFullScreen
+                    visible:         index < root._profileStreamCount && (root._fullVideoStreamIndex < 0 || cardFullScreen)
                     z:               cardFullScreen ? 10 : 0
                     sourceComponent: videoCardComponent
                 }
@@ -1707,7 +1772,7 @@ Item {
 
                     MouseArea {
                         anchors.fill: parent
-                        enabled: streamIndex !== 5 && decoding && root._trackingInputMode !== 2
+                        enabled: !VideoProfiles.previewOnly(videoProfileSettings.selectedMode, streamIndex) && decoding && root._trackingInputMode !== 2
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton
                         cursorShape: root._trackingInputMode === 0 ? Qt.CrossCursor : Qt.SizeAllCursor

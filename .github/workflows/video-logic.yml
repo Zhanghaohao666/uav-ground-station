@@ -1,0 +1,23 @@
+name: Video logic checks (not a full application build)
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  video-logic:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install isolated test dependencies
+        run: sudo apt-get update && sudo apt-get install -y qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools
+      - name: Check QML syntax
+        run: qmllint xsrc/XUI/XUI.qml
+      - name: Compile real video lifecycle methods and preset JS with fake receivers
+        working-directory: tests/video_demand
+        run: |
+          python3 generate_test_source.py
+          qmake demand.pro
+          make -j2
+          QT_QPA_PLATFORM=offscreen ./demand_tests

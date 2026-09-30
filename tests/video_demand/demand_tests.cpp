@@ -1,4 +1,7 @@
 #include <QtTest>
+#include <QJSEngine>
+#include <QQmlEngine>
+#include <QFile>
 #include <QQuickItem>
 #include <QSettings>
 #include <QTemporaryDir>
@@ -56,10 +59,11 @@ public:
  }
  bool _updateSettings(unsigned id){bool changed=_videoUri[id]!=configuredUri[id];_videoUri[id]=configuredUri[id];return changed;}
  int requestedStreamMask() const; void _loadRequestedStreams(); void _saveRequestedStreams();
- void setVideoStreamVisible(int,bool); bool _receiverWanted(unsigned) const; void _syncReceiver(unsigned);
+ Q_INVOKABLE void setVideoStreamVisible(int,bool); bool _receiverWanted(unsigned) const; void _syncReceiver(unsigned);
  void _handleStartComplete(unsigned,VideoReceiver::STATUS); void _handleStopComplete(unsigned,VideoReceiver::STATUS);
- void startVideo();void stopVideo();void startVideoStream(int);void stopVideoStream(int);
+ void startVideo();void stopVideo();Q_INVOKABLE void startVideoStream(int);Q_INVOKABLE void stopVideoStream(int);
  void _startReceiver(unsigned);void _stopReceiver(unsigned);void _restartVideo(unsigned);void _initVideoSink(QQuickItem*,unsigned);
+ Q_INVOKABLE void setProfileUri(int i,QString uri){configuredUri[i]=uri;_restartVideo(i);}
  void showAll(){for(int i=0;i<kStreamCount;++i)setVideoStreamVisible(i,true);}
  void startAll(){for(int i=0;i<kStreamCount;++i){setVideoStreamVisible(i,true);startVideoStream(i);receivers[i].finishStart();}}
 signals:
@@ -69,6 +73,22 @@ signals:
 class DemandTests : public QObject {
  Q_OBJECT
  QTemporaryDir temp;
+ bool applyPreset(VideoManager& m, const QString& mode) {
+  QJSEngine engine;
+  QQmlEngine::setObjectOwnership(&m, QQmlEngine::CppOwnership);
+  engine.globalObject().setProperty("manager",engine.newQObject(&m));
+  QFile file("../../xsrc/XUI/XVideoProfiles.js");
+  if(!file.open(QIODevice::ReadOnly)) return false;
+  if(engine.evaluate(QString::fromUtf8(file.readAll())).isError()) return false;
+  auto result=engine.evaluate(QString(R"JS(
+   var facts=[];
+   for(var i=0;i<6;++i) (function(index){
+     var fact={};Object.defineProperty(fact,'rawValue',{set:function(uri){manager.setProfileUri(index,uri);}});facts.push(fact);
+   })(i);
+   apply('%1',manager,facts,function(mode){var p=profile(mode);for(var i=2;i<6;++i)manager.setVideoStreamVisible(i,i<p.count);});
+  )JS").arg(mode));
+  return !result.isError() && result.toBool();
+ }
 private slots:
  void initTestCase(){QCoreApplication::setOrganizationName("UAVDemandTest");QCoreApplication::setApplicationName("isolated");QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,temp.path());}
  void init(){QSettings().clear();}
@@ -98,6 +118,35 @@ private slots:
  void sixthFullscreenStopsOthersAndRestores(){VideoManager m;m.startAll();for(int i=0;i<5;++i){m.setVideoStreamVisible(i,false);m.receivers[i].finishStop();}QCOMPARE(m.receivers[5].stops,0);QCOMPARE(m.requestedStreamMask(),63);m.showAll();for(int i=0;i<5;++i)QCOMPARE(m.receivers[i].starts,2);QCOMPARE(m.receivers[5].starts,1);}
  void sixthCloseDuringConnectDoesNotRestart(){VideoManager m;m.showAll();m.startVideoStream(5);m.stopVideoStream(5);m.receivers[5].finishStart();m.receivers[5].finishStop();QCOMPARE(m.receivers[5].starts,1);QCOMPARE(m.requestedStreamMask(),1);}
  void sixthHiddenRetryIsCancelled(){VideoManager m;m.setVideoStreamVisible(5,true);m.startVideoStream(5);m.receivers[5].finishStart(VideoReceiver::STATUS_FAIL);QVERIFY(m._videoRetryTimer[5]->isActive());m.setVideoStreamVisible(5,false);QTest::qWait(35);QCOMPARE(m.receivers[5].starts,1);QVERIFY(!m._videoRetryTimer[5]->isActive());}
+ void gimbalPresetKeepsSharedReceiversAndReplacesPayload() {
+  VideoManager m;m.startAll();auto shared0=m.configuredUri[0];auto shared1=m.configuredUri[1];
+  QVERIFY(applyPreset(m,"gimbal"));
+  for(int i=0;i<2;++i){QCOMPARE(m.receivers[i].stops,0);QCOMPARE(m.receivers[i].starts,1);}
+  QCOMPARE(m.configuredUri[0],shared0);QCOMPARE(m.configuredUri[1],shared1);
+  QCOMPARE(m.requestedStreamMask(),15);
+  for(int i=2;i<6;++i)m.receivers[i].finishStop();
+  QCOMPARE(m.receivers[2].lastUri,QString("rtsp://192.168.2.36:8555/gimbal"));
+  QCOMPARE(m.receivers[3].lastUri,QString("rtsp://192.168.2.36:8556/gimbal_ir"));
+  QCOMPARE(m.receivers[4].starts,1);QCOMPARE(m.receivers[5].starts,1);
+ }
+ void rapidPresetSwitchUsesLatestUrlsAfterAsyncStop() {
+  VideoManager m;m.startAll();QVERIFY(applyPreset(m,"gimbal"));QVERIFY(applyPreset(m,"algorithm"));
+  for(int i=2;i<6;++i)m.receivers[i].finishStop();
+  QCOMPARE(m.receivers[2].lastUri,QString("rtsp://192.168.2.36:8554/algorithm"));
+  QCOMPARE(m.receivers[3].lastUri,QString("rtsp://192.168.2.36:8554/preview"));
+  QCOMPARE(m.receivers[4].lastUri,QString("rtsp://192.168.2.36:8554/infrared"));
+  QCOMPARE(m.receivers[5].starts,1);QCOMPARE(m.requestedStreamMask(),31);
+  for(int i=0;i<2;++i)QCOMPARE(m.receivers[i].stops,0);
+ }
+ void switchingPreservesClosedSharedCameras() {
+  VideoManager m;m.stopVideoStream(0);m.showAll();QVERIFY(applyPreset(m,"algorithm"));
+  QCOMPARE(m.requestedStreamMask(),28);
+  for(int i=0;i<2;++i){QCOMPARE(m.receivers[i].starts,0);QCOMPARE(m.receivers[i].stops,0);}
+ }
+ void invalidPresetDoesNotChangeAnyStream() {
+  VideoManager m;m.startAll();QVERIFY(!applyPreset(m,"invalid"));QCOMPARE(m.requestedStreamMask(),63);
+  for(auto& r:m.receivers){QCOMPARE(r.starts,1);QCOMPARE(r.stops,0);}
+ }
  void sinkIsReusedForSameFullscreenItem(){VideoManager m;QQuickItem item;const int before=app.box.core.creates;m._initVideoSink(&item,0);void* first=m._videoSink[0];m._initVideoSink(&item,0);QCOMPARE(app.box.core.creates,before+1);QCOMPARE(m._videoSink[0],first);}
 };
 QTEST_MAIN(DemandTests)

@@ -23,8 +23,12 @@ PASS   : DemandTests::gimbalInfraredChoicePersists()
 PASS   : DemandTests::sixthFullscreenStopsOthersAndRestores()
 PASS   : DemandTests::sixthCloseDuringConnectDoesNotRestart()
 PASS   : DemandTests::sixthHiddenRetryIsCancelled()
-QDEBUG : DemandTests::sinkIsReusedForSameFullscreenItem() demand.tests: video sink bound 0 QQuickItem(0x7ffcbd513e90, parent=0x0, geometry=0,0 0x0) "" 0 0
+PASS   : DemandTests::gimbalPresetKeepsSharedReceiversAndReplacesPayload()
+PASS   : DemandTests::rapidPresetSwitchUsesLatestUrlsAfterAsyncStop()
+PASS   : DemandTests::switchingPreservesClosedSharedCameras()
+PASS   : DemandTests::invalidPresetDoesNotChangeAnyStream()
+QDEBUG : DemandTests::sinkIsReusedForSameFullscreenItem() demand.tests: video sink bound 0 QQuickItem(0x7ffe356ea390, parent=0x0, geometry=0,0 0x0) "" 0 0
 PASS   : DemandTests::sinkIsReusedForSameFullscreenItem()
 PASS   : DemandTests::cleanupTestCase()
-Totals: 23 passed, 0 failed, 0 skipped, 0 blacklisted, 959ms
+Totals: 27 passed, 0 failed, 0 skipped, 0 blacklisted, 1445ms
 ********* Finished testing of DemandTests *********
