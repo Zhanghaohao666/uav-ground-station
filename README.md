@@ -1,6 +1,6 @@
 # 无人机地面站
 
-当前源码标签：**v1.01.09-base — 原始五路地面站**。基于用户提供的 `v1.01.09_fix_gimbal_tcp` Qt/QGroundControl 工程。
+当前源码标签：**v1.01.09-mk22-ir — 算法板红外默认地址**。基于用户提供的 `v1.01.09_fix_gimbal_tcp` Qt/QGroundControl 工程。
 
 **本仓库提供源码，不提供已经构建或验收的 Windows EXE。** 发布标签用于区分实际源码快照；未修改程序内部原有版本号。这些标签是在 2026-09-30 整理导入，表中日期为原快照日期，不代表当日已发布 GitHub。
 
@@ -9,15 +9,17 @@
 | 标签 | 原快照日期 | 主要内容 |
 |---|---|---|
 | [v1.01.09-base](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-base) | 2026-09-28 | 原始五路地面站 |
+| [v1.01.09-mk22-ir](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-mk22-ir) | 2026-09-29 | 算法板红外默认地址 |
 
 查看 [完整变化记录](CHANGELOG.md)、[已知问题](project-docs/KNOWN_ISSUES.md) 和 [构建、接线与使用说明](project-docs/BUILD_AND_USAGE.md)。GitHub Releases 每个版本可下载对应 Source code (zip)。最新开发源码在 main。
 
 ## 当前版本内容
 
-- 导入用户提供的原始五路地面站源码，作为后续改动的基线。
-- 保留现有飞行、视频、云台 TCP 和脚本入口；此标签不表示审查问题已修复。
+- 第 5 路默认地址为 rtsp://192.168.2.36:8554/infrared。
+- 旧设置第 5 路为空或空白时补默认值，已有非空自定义地址保持不变。
+- 仍是五路窗口；未改变拉流策略、控制端口或其他四路地址。
 
-验证：已做源码审查及部分 TCP 隔离复现，未验收完整 Windows 程序。
+验证：JSON、默认值及空值迁移逻辑检查通过；未编译 Windows EXE。
 
 ## 板端部署
 

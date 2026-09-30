@@ -10,5 +10,18 @@
     ],
     "tests": "已做源码审查及部分 TCP 隔离复现，未验收完整 Windows 程序。",
     "original_archive_sha256": "e8079033b3f2205d4631e33272aef7e21e09adda2aa62110b5d36b770d8cea72"
+  },
+  {
+    "tag": "v1.01.09-mk22-ir",
+    "archive": "v1.01.09_fix_gimbal_tcp_mk22_infrared.zip",
+    "date": "2026-09-29",
+    "title": "算法板红外默认地址",
+    "features": [
+      "第 5 路默认地址为 rtsp://192.168.2.36:8554/infrared。",
+      "旧设置第 5 路为空或空白时补默认值，已有非空自定义地址保持不变。",
+      "仍是五路窗口；未改变拉流策略、控制端口或其他四路地址。"
+    ],
+    "tests": "JSON、默认值及空值迁移逻辑检查通过；未编译 Windows EXE。",
+    "original_archive_sha256": "c4152163314ad51d2d09e75409e312f657e5672d067974526df386b08cde7352"
   }
 ]

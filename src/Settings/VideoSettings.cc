@@ -212,6 +212,10 @@ DECLARE_SETTINGSFACT_NO_FUNC(VideoSettings, rtspUrl5)
 {
     if (!_rtspUrl5Fact) {
         _rtspUrl5Fact = _createSettingsFact(rtspUrl5Name);
+        // Fill legacy empty infrared settings; preserve a user-configured URL.
+        if (_rtspUrl5Fact->rawValue().toString().trimmed().isEmpty()) {
+            _rtspUrl5Fact->setRawValue(_rtspUrl5Fact->rawDefaultValue());
+        }
         connect(_rtspUrl5Fact, &Fact::valueChanged, this, &VideoSettings::_configChanged);
     }
     return _rtspUrl5Fact;
