@@ -64,6 +64,7 @@ public:
  void startVideo();void stopVideo();Q_INVOKABLE void startVideoStream(int);Q_INVOKABLE void stopVideoStream(int);
  void _startReceiver(unsigned);void _stopReceiver(unsigned);void _restartVideo(unsigned);void _initVideoSink(QQuickItem*,unsigned);
  Q_INVOKABLE void setProfileUri(int i,QString uri){configuredUri[i]=uri;_restartVideo(i);}
+ Q_INVOKABLE QString getProfileUri(int i) const {return configuredUri[i];}
  void showAll(){for(int i=0;i<kStreamCount;++i)setVideoStreamVisible(i,true);}
  void startAll(){for(int i=0;i<kStreamCount;++i){setVideoStreamVisible(i,true);startVideoStream(i);receivers[i].finishStart();}}
 signals:
@@ -83,7 +84,7 @@ class DemandTests : public QObject {
   auto result=engine.evaluate(QString(R"JS(
    var facts=[];
    for(var i=0;i<6;++i) (function(index){
-     var fact={};Object.defineProperty(fact,'rawValue',{set:function(uri){manager.setProfileUri(index,uri);}});facts.push(fact);
+     var fact={};Object.defineProperty(fact,'rawValue',{get:function(){return manager.getProfileUri(index);},set:function(uri){manager.setProfileUri(index,uri);}});facts.push(fact);
    })(i);
    apply('%1',manager,facts,function(mode){var p=profile(mode);for(var i=2;i<6;++i)manager.setVideoStreamVisible(i,i<p.count);});
   )JS").arg(mode));
@@ -146,6 +147,46 @@ private slots:
  void invalidPresetDoesNotChangeAnyStream() {
   VideoManager m;m.startAll();QVERIFY(!applyPreset(m,"invalid"));QCOMPARE(m.requestedStreamMask(),63);
   for(auto& r:m.receivers){QCOMPARE(r.starts,1);QCOMPARE(r.stops,0);}
+ }
+ void presetRepairsD455AccidentallySetToPreviewWithoutOpeningIt() {
+  VideoManager m;m.configuredUri[1]="rtsp://192.168.2.36:8554/preview";
+  m.setVideoStreamVisible(0,true);m.receivers[0].finishStart();
+  QVERIFY(applyPreset(m,"algorithm"));
+  QCOMPARE(m.configuredUri[1],QString("rtsp://192.168.2.36:8554/rgb"));
+  QCOMPARE(m.receivers[1].starts,0);QCOMPARE(m.receivers[0].stops,0);QCOMPARE(m.requestedStreamMask(),29);
+ }
+ void repairsOnlyBadSharedCameraKeepsCorrectCameraAndSelection() {
+  VideoManager m;m.configuredUri[0]="rtsp://192.168.2.36:8554/board";m.configuredUri[1]="rtsp://192.168.2.36:8554/preview";
+  m.startAll();QVERIFY(applyPreset(m,"gimbal"));
+  QCOMPARE(m.receivers[0].stops,0);QCOMPARE(m.receivers[1].stops,1);
+  m.receivers[1].finishStop();QCOMPARE(m.receivers[1].lastUri,QString("rtsp://192.168.2.36:8554/rgb"));
+  QCOMPARE(m.requestedStreamMask(),15);
+ }
+ void wifiAddressIsPreservedAndEmptySharedGetsDefaults() {
+  VideoManager m;m.configuredUri[0]="";m.configuredUri[1]="rtsp://192.168.1.104:8554/algorithm";
+  QVERIFY(applyPreset(m,"algorithm"));
+  QCOMPARE(m.configuredUri[0],QString("rtsp://192.168.2.36:8554/board"));
+  QCOMPARE(m.configuredUri[1],QString("rtsp://192.168.1.104:8554/rgb"));
+  QCOMPARE(m.receivers[1].starts,0);
+ }
+ void actualSettingsDefaultsAndExplicitRestoreAreDistinct() {
+  QFile metadata("../../src/Settings/Video.SettingsGroup.json");QVERIFY(metadata.open(QIODevice::ReadOnly));
+  auto facts=QJsonDocument::fromJson(metadata.readAll()).object()["QGC.MetaData.Facts"].toArray();
+  QMap<QString,QString> defaults;for(auto fact:facts)defaults[fact.toObject()["name"].toString()]=fact.toObject()["default"].toString();
+  QCOMPARE(defaults["rtspUrl"],QString("rtsp://192.168.2.36:8554/board"));QCOMPARE(defaults["rtspUrl2"],QString("rtsp://192.168.2.36:8554/rgb"));
+  QJSEngine js;QFile file("../../xsrc/XUI/XVideoProfiles.js");QVERIFY(file.open(QIODevice::ReadOnly));QVERIFY(!js.evaluate(QString::fromUtf8(file.readAll())).isError());
+  auto value=js.evaluate("var f=[{rawValue:'rtsp://custom.test/down'},{rawValue:'rtsp://custom.test/other'}]; repairShared(f); f[1].rawValue");
+  QCOMPARE(value.toString(),QString("rtsp://custom.test/other"));
+  QCOMPARE(js.evaluate("resetShared(f); f[1].rawValue").toString(),defaults["rtspUrl2"]);
+ }
+ void onlyAlgorithmInputsRouteTrackingToIndependentControllers() {
+  QJSEngine js;QFile file("../../xsrc/XUI/XVideoProfiles.js");QVERIFY(file.open(QIODevice::ReadOnly));QVERIFY(!js.evaluate(QString::fromUtf8(file.readAll())).isError());
+  auto target=js.globalObject().property("controlTarget");
+  QCOMPARE(target.call({"rtsp://192.168.2.36:8554/algorithm"}).toString(),QString("algorithm"));
+  QCOMPARE(target.call({"rtsp://192.168.1.104:8555/gimbal"}).toString(),QString("gimbal"));
+  QCOMPARE(target.call({"rtsp://192.168.144.108:554/live/0"}).toString(),QString("gimbal"));
+  for(const auto& key:{"board","rgb","preview","infrared","gimbal_ir"})
+   QCOMPARE(target.call({QString("rtsp://192.168.2.36:8554/")+key}).toString(),QString());
  }
  void sinkIsReusedForSameFullscreenItem(){VideoManager m;QQuickItem item;const int before=app.box.core.creates;m._initVideoSink(&item,0);void* first=m._videoSink[0];m._initVideoSink(&item,0);QCOMPARE(app.box.core.creates,before+1);QCOMPARE(m._videoSink[0],first);}
 };

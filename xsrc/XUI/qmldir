@@ -106,3 +106,4 @@ QmlTest 1.0 QmlTest.qml
 #ButtonImageLabel 1.0 ButtonImageLabel.qml
 
 
+XPayloadControlPanel 1.0 XPayloadControlPanel.qml

@@ -47,6 +47,7 @@
 #include "ESP8266ComponentController.h"
 #include "XScreenToolsController.h"
 #include "XGimbalTcpController.h"
+#include "XAlgorithmTcpController.h"
 #include "XScriptTcpController.h"
 #include "XBoardRecordingController.h"
 #include "QGCFileDialogController.h"
@@ -554,6 +555,7 @@ void QGCApplication::_initCommon()
     qmlRegisterType<ParameterEditorController>      (kQGCControllers,                       1, 0, "ParameterEditorController");
     qmlRegisterType<ESP8266ComponentController>     (kQGCControllers,                       1, 0, "ESP8266ComponentController");
     qmlRegisterType<XGimbalTcpController>           ("XUI",                                  1, 0, "XGimbalTcpController");
+    qmlRegisterType<XAlgorithmTcpController>("XUI", 1, 0, "XAlgorithmTcpController");
     qmlRegisterType<XBoardRecordingController>("XUI", 1, 0, "XBoardRecordingController");
     qmlRegisterType<XScriptTcpController>           ("XUI",                                  1, 0, "XScriptTcpController");
     // qmlRegisterType<ScreenToolsController>          (kQGCControllers,                       1, 0, "ScreenToolsController");

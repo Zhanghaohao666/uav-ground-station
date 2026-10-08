@@ -37,6 +37,12 @@ Item {
     property alias  _gripperMenu:            gripperOptions
     property int _selectedNavIndex: 0
     property int _fullVideoStreamIndex: -1
+    property string _controlTarget: videoProfileSettings.selectedMode === "algorithm" ? "algorithm" : "gimbal"
+    function controllerForUri(uri) {
+        var target = VideoProfiles.controlTarget(uri)
+        return target === "algorithm" ? algorithmTcpController : (target === "gimbal" ? gimbalTcpController : null)
+    }
+    Component.onCompleted: VideoProfiles.repairShared(root._videoRtspFacts)
     property int _trackingInputMode: 0   // 0: point select, 1: drag select, 2: target ID
     property real   _base:                      XScreenTool.base /21.2 * _sc
     readonly property real   _sc:               1.0
@@ -85,6 +91,7 @@ Item {
                 // screen exits so all newly selected payload views are visible.
                 if (root._fullVideoStreamIndex >= 2) root._fullVideoStreamIndex = -1
                 videoProfileSettings.selectedMode = selected
+                root._controlTarget = selected
             })
         } finally {
             _applyingVideoProfile = false
@@ -179,9 +186,8 @@ Item {
     XBoardRecordingController { id: boardRecordingController }
     XBoardRecordingDialog { id: boardRecordingDialog; controller: boardRecordingController }
 
-    XGimbalTcpController {
-        id: gimbalTcpController
-    }
+    XGimbalTcpController { id: gimbalTcpController }
+    XAlgorithmTcpController { id: algorithmTcpController }
 
     GuidedActionConfirm {
         id:                         guidedActionConfirm
@@ -356,10 +362,14 @@ Item {
                         onClicked: root.applyVideoProfile(modelData.mode)
                     }
                 }
+                XButtonLabel {
+                    text: qsTr("下视/D455默认")
+                    onClicked: VideoProfiles.resetShared(root._videoRtspFacts)
+                }
                 XLabel {
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: videoProfileBar.width > 820
-                    text: videoProfileSettings.selectedMode === "custom" ? qsTr("当前：自定义地址") : qsTr("默认 MK22 地址；下视、D455i 保持原设置")
+                    visible: videoProfileBar.width > 1050
+                    text: videoProfileSettings.selectedMode === "custom" ? qsTr("当前：自定义地址") : qsTr("默认 MK22 地址；公共相机地址已检查")
                     color: XGlobalColor.label2
                     small: true
                 }
@@ -873,7 +883,7 @@ Item {
                 Repeater {
                     model: [
                         qsTr("Flight"),
-                        qsTr("Pod")
+                        qsTr("载荷控制")
                     ]
 
                     delegate: Rectangle {
@@ -1201,398 +1211,57 @@ Item {
             }
 
             Rectangle {
-                id:           gimbalPanel
-                width:        parent.width
-                height:       rightPanel._mode === 1 ? rightPanel._panelHeight : 0
-                visible:      rightPanel._mode === 1
-                radius:       8
-                color:        XGlobalColor.background2
+                id: payloadControlPanel
+                width: parent.width
+                height: rightPanel._mode === 1 ? rightPanel._panelHeight : 0
+                visible: rightPanel._mode === 1
+                radius: 8
+                color: XGlobalColor.background2
                 border.color: XGlobalColor.line
-                border.width: 1
-                clip:         true
+                clip: true
 
-                Flickable {
-                    anchors.fill:    parent
+                Row {
+                    id: controlTargetTabs
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
                     anchors.margins: mainHome._gap
-                    contentWidth:    width
-                    contentHeight:   gimbalColumn.height
-                    clip:            true
-
-                    Column {
-                        id:      gimbalColumn
-                        width:   parent.width
-                        spacing: mainHome._gap * 0.7
-
-                        XLabel {
-                            text:  qsTr("Pod Control")
-                            color: XGlobalColor.label
-                            big:   true
-                        }
-
-                        Grid {
-                            width: parent.width
-                            columns: 2
-                            columnSpacing: mainHome._gap * 0.45
-                            rowSpacing: mainHome._gap * 0.45
-
-                            TextField {
-                                id: gimbalIpField
-                                width: (parent.width - parent.columnSpacing) * 0.58
-                                height: Math.max(_margin * 2.2, 32)
-                                text: gimbalTcpController.tcpServerIP
-                                color: XGlobalColor.label
-                                placeholderText: qsTr("Device IP")
-                                selectByMouse: true
-                                background: Rectangle {
-                                    radius: 4
-                                    color: XGlobalColor.background
-                                    border.color: XGlobalColor.line
-                                    border.width: 1
-                                }
-                            }
-
-                            TextField {
-                                id: gimbalPortField
-                                width: (parent.width - parent.columnSpacing) * 0.42
-                                height: gimbalIpField.height
-                                text: gimbalTcpController.tcpServerPort.toString()
-                                color: XGlobalColor.label
-                                placeholderText: qsTr("Port")
-                                inputMethodHints: Qt.ImhDigitsOnly
-                                selectByMouse: true
-                                background: Rectangle {
-                                    radius: 4
-                                    color: XGlobalColor.background
-                                    border.color: XGlobalColor.line
-                                    border.width: 1
-                                }
-                            }
-                        }
-
-                        Row {
-                            width: parent.width
-                            spacing: mainHome._gap * 0.45
-
-                            XButtonLabel {
-                                width: (parent.width - parent.spacing) / 2
-                                height: Math.max(_margin * 2.3, 34)
-                                text: gimbalTcpController.isConnected ? qsTr("Disconnect") : qsTr("Connect")
-                                onClicked: {
-                                    gimbalTcpController.tcpServerIP = gimbalIpField.text
-                                    gimbalTcpController.tcpServerPort = parseInt(gimbalPortField.text)
-                                    if (gimbalTcpController.isConnected) {
-                                        gimbalTcpController.disConnectQml()
-                                    } else {
-                                        gimbalTcpController.connectQml(gimbalIpField.text, parseInt(gimbalPortField.text))
-                                    }
-                                }
-                            }
-
-                            Rectangle {
-                                width: (parent.width - parent.spacing) / 2
-                                height: Math.max(_margin * 2.3, 34)
-                                radius: 4
-                                color: gimbalTcpController.isConnected ? "#334fd6a2" : "#33d65f5f"
-                                border.color: XGlobalColor.line
-                                border.width: 1
-
-                                XLabel {
-                                    anchors.centerIn: parent
-                                    text: gimbalTcpController.isConnected ? qsTr("Command OK") : qsTr("Command Off")
-                                    color: XGlobalColor.label
-                                    small: true
-                                }
-                            }
-                        }
-
-                        XLabel {
-                            text: qsTr("Video channel: main video area")
-                            color: XGlobalColor.label2
-                            small: true
-                        }
-
-                        Row {
-                            width: parent.width
-                            height: Math.max(_margin * 2.3, 34)
-                            spacing: mainHome._gap * 0.45
-
-                            Item {
-                                id: detectionIndicatorContainer
-                                width: Math.max(_margin * 3.2, 42)
-                                height: parent.height
-
-                                Row {
-                                    anchors.centerIn: parent
-                                    spacing: Math.max(_margin * 0.35, 5)
-
-                                    Rectangle {
-                                        width: Math.max(_margin * 0.85, 10)
-                                        height: width
-                                        radius: width / 2
-                                        color: gimbalTcpController.detectionEnabled ? XGlobalColor.success : XGlobalColor.btnbg2
-                                        border.color: gimbalTcpController.detectionEnabled ? XGlobalColor.success : XGlobalColor.line
-                                        border.width: 1
-                                    }
-
-                                    Rectangle {
-                                        width: Math.max(_margin * 0.85, 10)
-                                        height: width
-                                        radius: width / 2
-                                        color: gimbalTcpController.detectionEnabled ? XGlobalColor.btnbg2 : XGlobalColor.danger
-                                        border.color: gimbalTcpController.detectionEnabled ? XGlobalColor.line : XGlobalColor.danger
-                                        border.width: 1
-                                    }
-                                }
-                            }
-
-                            XButtonLabel {
-                                width: parent.width - detectionIndicatorContainer.width - parent.spacing
-                                height: parent.height
-                                enabled: gimbalTcpController.isConnected
-                                text: gimbalTcpController.detectionEnabled ? qsTr("Disable Detection") : qsTr("Enable Detection")
-                                _theme: gimbalTcpController.detectionEnabled ? XGlobalColor.theme2 : XGlobalColor.theme
-                                onClicked: gimbalTcpController.setDetectionEnabled(!gimbalTcpController.detectionEnabled)
-                            }
-                        }
-
-                        XLabel {
-                            text: qsTr("Target Selection")
-                            color: XGlobalColor.label
-                            small: true
-                        }
-
-                        Row {
-                            width: parent.width
-                            spacing: mainHome._gap * 0.35
-
-                            XButtonLabel {
-                                width: (parent.width - parent.spacing * 2) / 3
-                                height: Math.max(_margin * 2.3, 34)
-                                text: qsTr("Point Select")
-                                _theme: root._trackingInputMode === 0 ? XGlobalColor.theme2 : XGlobalColor.theme
-                                onClicked: root._trackingInputMode = 0
-                            }
-                            XButtonLabel {
-                                width: (parent.width - parent.spacing * 2) / 3
-                                height: Math.max(_margin * 2.3, 34)
-                                text: qsTr("Drag Select")
-                                _theme: root._trackingInputMode === 1 ? XGlobalColor.theme2 : XGlobalColor.theme
-                                onClicked: root._trackingInputMode = 1
-                            }
-                            XButtonLabel {
-                                width: (parent.width - parent.spacing * 2) / 3
-                                height: Math.max(_margin * 2.3, 34)
-                                text: qsTr("By ID")
-                                _theme: root._trackingInputMode === 2 ? XGlobalColor.theme2 : XGlobalColor.theme
-                                onClicked: root._trackingInputMode = 2
-                            }
-                        }
-
-                        XLabel {
-                            width: parent.width
-                            text: root._trackingInputMode === 0 ? qsTr("Double-click a target in the video") :
-                                  (root._trackingInputMode === 1 ? qsTr("Drag a target box in the video") : qsTr("Enter a target ID"))
-                            color: XGlobalColor.label2
-                            small: true
-                            wrapMode: Text.WordWrap
-                        }
-
-                        Row {
-                            width: parent.width
-                            height: root._trackingInputMode === 2 ? Math.max(_margin * 2.3, 34) : 0
-                            spacing: mainHome._gap * 0.45
-                            visible: root._trackingInputMode === 2
-
-                            TextField {
-                                id: targetIdField
-                                width: (parent.width - parent.spacing) * 0.55
-                                height: parent.height
-                                text: "0"
-                                color: XGlobalColor.label
-                                placeholderText: qsTr("Target ID")
-                                inputMethodHints: Qt.ImhDigitsOnly
-                                background: Rectangle { radius: 4; color: XGlobalColor.background; border.color: XGlobalColor.line; border.width: 1 }
-                            }
-
-                            XButtonLabel {
-                                width: (parent.width - parent.spacing) * 0.45
-                                height: parent.height
-                                text: qsTr("Track Target ID")
-                                onClicked: gimbalTcpController.trackId(parseInt(targetIdField.text))
-                            }
-                        }
-
-                        XButtonLabel {
-                            width: parent.width
-                            height: Math.max(_margin * 2.3, 34)
-                            text: qsTr("Stop Tracking")
-                            onClicked: gimbalTcpController.unlockTracking()
-                        }
-
-                        Row {
-                            width: parent.width
-                            spacing: mainHome._gap * 0.45
-
-                            XButtonLabel { width: (parent.width - parent.spacing) / 2; height: Math.max(_margin * 2.3, 34); text: qsTr("Center"); onClicked: gimbalTcpController.gimbalCenter() }
-                            XButtonLabel { width: (parent.width - parent.spacing) / 2; height: Math.max(_margin * 2.3, 34); text: qsTr("Down 90"); onClicked: gimbalTcpController.gimbalDown90() }
-                        }
-
-                        Grid {
-                            width: parent.width
-                            columns: 3
-                            columnSpacing: mainHome._gap * 0.35
-                            rowSpacing: mainHome._gap * 0.35
-
-                            TextField { id: pitchSetField; width: (parent.width - parent.columnSpacing * 2) / 3; height: Math.max(_margin * 2.1, 30); text: "0"; color: XGlobalColor.label; placeholderText: qsTr("Pitch"); background: Rectangle { radius: 4; color: XGlobalColor.background; border.color: XGlobalColor.line; border.width: 1 } }
-                            TextField { id: yawSetField; width: pitchSetField.width; height: pitchSetField.height; text: "0"; color: XGlobalColor.label; placeholderText: qsTr("Yaw"); background: Rectangle { radius: 4; color: XGlobalColor.background; border.color: XGlobalColor.line; border.width: 1 } }
-                            XButtonLabel { width: pitchSetField.width; height: pitchSetField.height; text: qsTr("Set"); onClicked: gimbalTcpController.setGimbalAngle(parseInt(pitchSetField.text), parseInt(yawSetField.text)) }
-                        }
-
-                        Row {
-                            width: parent.width
-                            spacing: mainHome._gap * 0.45
-
-                            XButtonLabel { width: (parent.width - parent.spacing) / 2; height: Math.max(_margin * 2.3, 34); text: qsTr("Lock"); onClicked: gimbalTcpController.setGimbalLocked(true) }
-                            XButtonLabel { width: (parent.width - parent.spacing) / 2; height: Math.max(_margin * 2.3, 34); text: qsTr("Unlock"); onClicked: gimbalTcpController.setGimbalLocked(false) }
-                        }
-
-                        GridLayout {
-                            columns: 3
-                            rowSpacing: _margin * 0.4
-                            columnSpacing: _margin * 0.4
-                            anchors.horizontalCenter: parent.horizontalCenter
-
-                            Item { width: _margin * 5; height: _margin * 3.4 }
-                            XButtonLabel {
-                                text: qsTr("Up")
-                                Layout.preferredWidth: _margin * 5
-                                Layout.preferredHeight: _margin * 3.4
-                                onPressed: gimbalTcpController.sendGimbalSpeed(128, 180);
-                                onReleased: gimbalTcpController.stopGimbalSpeed()
-                            }
-                            Item { width: _margin * 5; height: _margin * 3.4 }
-
-                            XButtonLabel {
-                                text: qsTr("Left")
-                                Layout.preferredWidth: _margin * 5
-                                Layout.preferredHeight: _margin * 3.4
-                                onPressed: gimbalTcpController.sendGimbalSpeed(76, 128)
-                                onReleased: gimbalTcpController.stopGimbalSpeed()
-                            }
-                            XButtonLabel {
-                                text: qsTr("Stop")
-                                Layout.preferredWidth: _margin * 5
-                                Layout.preferredHeight: _margin * 3.4
-                                onClicked: gimbalTcpController.stopGimbalSpeed()
-                            }
-                            XButtonLabel {
-                                text: qsTr("Right")
-                                Layout.preferredWidth: _margin * 5
-                                Layout.preferredHeight: _margin * 3.4
-                                onPressed: gimbalTcpController.sendGimbalSpeed(180, 128); onReleased: gimbalTcpController.stopGimbalSpeed()
-                            }
-
-                            Item { width: _margin * 5; height: _margin * 3.4 }
-                            XButtonLabel {
-                                text: qsTr("Down")
-                                Layout.preferredWidth: _margin * 5
-                                Layout.preferredHeight: _margin * 3.4
-                                onPressed: gimbalTcpController.sendGimbalSpeed(128, 76); onReleased: gimbalTcpController.stopGimbalSpeed()
-                            }
-                            Item { width: _margin * 5; height: _margin * 3.4 }
-                        }
-
-                        // Grid {
-                        //     width: Math.min(parent.width, _margin * 14)
-                        //     anchors.horizontalCenter: parent.horizontalCenter
-                        //     columns: 3
-                        //     rowSpacing: mainHome._gap * 0.35
-                        //     columnSpacing: mainHome._gap * 0.35
-
-                        //     Item { width: (parent.width - parent.columnSpacing * 2) / 3; height: speedUpButton.height }
-                        //     XButtonLabel { id: speedUpButton; width: (parent.parent.width - parent.columnSpacing * 2) / 3; height: Math.max(_margin * 2.2, 32); text: qsTr("Up"); onPressed: gimbalTcpController.sendGimbalSpeed(128, 180); onReleased: gimbalTcpController.stopGimbalSpeed() }
-                        //     Item { width: speedUpButton.width; height: speedUpButton.height }
-                        //     XButtonLabel { width: speedUpButton.width; height: speedUpButton.height; text: qsTr("Left"); onPressed: gimbalTcpController.sendGimbalSpeed(76, 128); onReleased: gimbalTcpController.stopGimbalSpeed() }
-                        //     XButtonLabel { width: speedUpButton.width; height: speedUpButton.height; text: qsTr("Stop"); onClicked: gimbalTcpController.stopGimbalSpeed() }
-                        //     XButtonLabel { width: speedUpButton.width; height: speedUpButton.height; text: qsTr("Right"); onPressed: gimbalTcpController.sendGimbalSpeed(180, 128); onReleased: gimbalTcpController.stopGimbalSpeed() }
-                        //     Item { width: speedUpButton.width; height: speedUpButton.height }
-                        //     XButtonLabel { width: speedUpButton.width; height: speedUpButton.height; text: qsTr("Down"); onPressed: gimbalTcpController.sendGimbalSpeed(128, 76); onReleased: gimbalTcpController.stopGimbalSpeed() }
-                        //     Item { width: speedUpButton.width; height: speedUpButton.height }
-                        // }
-
-                        Rectangle {
-                            width: parent.width
-                            height: Math.max(_margin * 10, statusColumn.height + mainHome._gap)
-                            radius: 5
-                            color: XGlobalColor.background
-                            border.color: XGlobalColor.line
-                            border.width: 1
-
-                            Column {
-                                id: statusColumn
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.top: parent.top
-                                anchors.margins: mainHome._gap * 0.5
-                                spacing: 2
-
-                                XLabel { text: qsTr("Status") + ": " + gimbalTcpController.trackerStatusText; color: XGlobalColor.sub; small: true }
-                                XLabel { text: qsTr("Box") + ": " + gimbalTcpController.trackX + "," + gimbalTcpController.trackY + "," + gimbalTcpController.trackW + "," + gimbalTcpController.trackH; color: XGlobalColor.label2; small: true }
-                                XLabel { text: qsTr("Yaw") + ": " + gimbalTcpController.yawDeg.toFixed(2) + "  " + qsTr("Pitch") + ": " + gimbalTcpController.pitchDeg.toFixed(2); color: XGlobalColor.label2; small: true }
-                                XLabel { text: qsTr("Targets") + ": " + gimbalTcpController.targetCount; color: XGlobalColor.label2; small: true }
-                                XLabel { text: gimbalTcpController.statusText; color: XGlobalColor.label; small: true; wrapMode: Text.WordWrap; width: parent.width }
-                            }
-                        }
-
-                        ScrollView {
-                            width: parent.width
-                            height: Math.min(Math.max(_margin * 14, 180), Math.max(_margin * 10, gimbalPanel.height * 0.34))
-                            clip: true
-                            ScrollBar.vertical.policy: ScrollBar.AsNeeded
-                            ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-
-                            TextArea {
-                                id: gimbalLogArea
-                                width: parent.width
-                                text: gimbalTcpController.logText
-                                readOnly: true
-                                selectByMouse: true
-                                wrapMode: TextEdit.Wrap
-                                color: XGlobalColor.label2
-                                font.pixelSize: Math.max(12, _margin * 1.0)
-                                onTextChanged: cursorPosition = length
-                                background: Rectangle {
-                                    radius: 5
-                                    color: XGlobalColor.background
-                                    border.color: XGlobalColor.line
-                                    border.width: 1
-                                }
-                            }
-                        }
-
-                        XButtonLabel {
-                            width: parent.width
-                            height: Math.max(_margin * 2.2, 32)
-                            text: qsTr("Clear Log")
-                            onClicked: gimbalTcpController.clearLog()
-                        }
-
-                        Grid {
-                            width: parent.width
-                            columns: 3
-                            columnSpacing: mainHome._gap * 0.35
-                            rowSpacing: mainHome._gap * 0.35
-
-                            XButtonLabel { width: (parent.width - parent.columnSpacing * 2) / 3; height: Math.max(_margin * 2.3, 34); text: qsTr("1") }
-                            XButtonLabel { width: (parent.width - parent.columnSpacing * 2) / 3; height: Math.max(_margin * 2.3, 34); text: qsTr("2") }
-                            XButtonLabel { width: (parent.width - parent.columnSpacing * 2) / 3; height: Math.max(_margin * 2.3, 34); text: qsTr("3") }
-                            XButtonLabel { width: (parent.width - parent.columnSpacing * 2) / 3; height: Math.max(_margin * 2.3, 34); text: qsTr("4") }
-                            XButtonLabel { width: (parent.width - parent.columnSpacing * 2) / 3; height: Math.max(_margin * 2.3, 34); text: qsTr("5") }
-                            XButtonLabel { width: (parent.width - parent.columnSpacing * 2) / 3; height: Math.max(_margin * 2.3, 34); text: qsTr("6") }
+                    spacing: mainHome._gap * 0.4
+                    Repeater {
+                        model: [{label: "云台控制", target: "gimbal"}, {label: "算法板控制", target: "algorithm"}]
+                        delegate: XButtonLabel {
+                            width: (controlTargetTabs.width - controlTargetTabs.spacing) / 2
+                            text: modelData.label
+                            _theme: root._controlTarget === modelData.target ? XGlobalColor.theme2 : XGlobalColor.theme
+                            onClicked: root._controlTarget = modelData.target
                         }
                     }
                 }
+                XPayloadControlPanel {
+                    anchors.top: controlTargetTabs.bottom
+                    anchors.topMargin: mainHome._gap
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    visible: root._controlTarget === "gimbal"
+                    controller: gimbalTcpController
+                    gimbalControls: true
+                    trackingInputMode: root._trackingInputMode
+                    onInputModeRequested: root._trackingInputMode = mode
+                }
+                XPayloadControlPanel {
+                    anchors.top: controlTargetTabs.bottom
+                    anchors.topMargin: mainHome._gap
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    visible: root._controlTarget === "algorithm"
+                    controller: algorithmTcpController
+                    trackingInputMode: root._trackingInputMode
+                    onInputModeRequested: root._trackingInputMode = mode
+                }
             }
+
         }
 
         Component {
@@ -1604,6 +1273,7 @@ Item {
                 property var receiver: parent ? parent.cardReceiver : null
                 property var rtspFact: parent ? parent.cardRtspFact : null
                 property int streamIndex: parent ? parent.cardStreamIndex : -1
+                readonly property var trackingController: rtspFact ? root.controllerForUri(rtspFact.rawValue) : null
                 property bool fullScreenCard: parent && parent.cardFullScreen ? true : false
                 property bool decoding: false
                 property int sourceVideoWidth: 1920
@@ -1783,7 +1453,7 @@ Item {
 
                     MouseArea {
                         anchors.fill: parent
-                        enabled: !VideoProfiles.previewOnly(videoProfileSettings.selectedMode, streamIndex) && decoding && root._trackingInputMode !== 2
+                        enabled: trackingController !== null && decoding && root._trackingInputMode !== 2
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton
                         cursorShape: root._trackingInputMode === 0 ? Qt.CrossCursor : Qt.SizeAllCursor
@@ -1801,13 +1471,13 @@ Item {
                                 console.log("TRACK_XY rejected: click is outside displayed video")
                                 return
                             }
-                            if (!gimbalTcpController.isConnected) {
+                            if (!trackingController || !trackingController.isConnected) {
                                 showSelectionFeedback(qsTr("Command channel is not connected"), 1,
                                                       mouse.x, mouse.y, 0, 0)
                                 return
                             }
 
-                            gimbalTcpController.trackXY(point.x, point.y)
+                            trackingController.trackXY(point.x, point.y)
                             showSelectionFeedback(qsTr("Point sent: (%1, %2)").arg(point.x).arg(point.y), 1,
                                                   mouse.x, mouse.y, 0, 0)
                             console.log("TRACK_XY stream=" + streamIndex +
@@ -1862,14 +1532,14 @@ Item {
                                 console.log("TRACK_BOX rejected: empty selection")
                                 return
                             }
-                            if (!gimbalTcpController.isConnected) {
+                            if (!trackingController || !trackingController.isConnected) {
                                 showSelectionFeedback(qsTr("Command channel is not connected"), 2,
                                                       box.displayX, box.displayY,
                                                       box.displayWidth, box.displayHeight)
                                 return
                             }
 
-                            gimbalTcpController.trackBox(box.x, box.y, box.width, box.height)
+                            trackingController.trackBox(box.x, box.y, box.width, box.height)
                             showSelectionFeedback(qsTr("Box sent: (%1, %2, %3, %4)")
                                                   .arg(box.x).arg(box.y).arg(box.width).arg(box.height), 2,
                                                   box.displayX, box.displayY,

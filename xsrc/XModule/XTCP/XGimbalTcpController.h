@@ -71,6 +71,10 @@ signals:
     void targetsChanged();
     void logTextChanged();
 
+protected:
+    XGimbalTcpController(QObject* parent, const QString& settingsGroup,
+                         const QString& defaultIP, int defaultPort);
+
 private slots:
     void _receiveBytes(QByteArray bytes);
 

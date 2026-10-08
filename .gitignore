@@ -106,3 +106,7 @@ tests/board_recording/recording_ui_tests
 tests/board_recording/live_recording_smoke
 !tests/board_recording/ui_tests.cpp
 tests/board_recording/target_wrapper.sh
+tests/payload_controls/Makefile*
+tests/payload_controls/payload_tests
+tests/payload_controls/payload_live_feedback
+tests/payload_controls/target_wrapper.sh

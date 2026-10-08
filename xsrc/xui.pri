@@ -22,6 +22,7 @@
     $$PWD/XModule/XTCP/CcTcpClient.h \
     $$PWD/XModule/XTCP/XTCPClient.h \
     $$PWD/XModule/XTCP/XGimbalTcpController.h \
+    $$PWD/XModule/XTCP/XAlgorithmTcpController.h \
     $$PWD/XModule/XTCP/XScriptTcpController.h \
     $$PWD/XModule/XTCP/XBoardRecordingController.h
 

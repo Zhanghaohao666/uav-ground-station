@@ -13,7 +13,7 @@ jobs:
       - name: Install isolated test dependencies
         run: sudo apt-get update && sudo apt-get install -y qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2
       - name: Check QML syntax
-        run: qmllint xsrc/XUI/XUI.qml xsrc/XUI/XBoardRecordingDialog.qml
+        run: qmllint xsrc/XUI/XUI.qml xsrc/XUI/XBoardRecordingDialog.qml xsrc/XUI/XPayloadControlPanel.qml
       - name: Compile real video lifecycle methods and preset JS with fake receivers
         working-directory: tests/video_demand
         run: |
@@ -21,6 +21,12 @@ jobs:
           qmake demand.pro
           make -j2
           QT_QPA_PLATFORM=offscreen ./demand_tests
+      - name: Compile real independent TCP controllers and control panels
+        working-directory: tests/payload_controls
+        run: |
+          qmake payload.pro
+          make -j2
+          QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software ./payload_tests
       - name: Compile real board recorder controller and QML panel
         working-directory: tests/board_recording
         run: |

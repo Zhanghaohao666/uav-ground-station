@@ -1,7 +1,7 @@
-#include <QtQml>
+#include <QSettings>
+#include <QThread>
 //#include "TcpServerController.h"
 #include "XTCPClient.h"
-#include "QGCApplication.h"
 #include "qdebug.h"
 
 //#include "QGCCorePlugin.h"

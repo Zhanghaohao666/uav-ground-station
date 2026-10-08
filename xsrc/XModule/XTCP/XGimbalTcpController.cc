@@ -19,7 +19,19 @@ int clampInt(int value, int minValue, int maxValue)
 }
 
 XGimbalTcpController::XGimbalTcpController(QObject* parent)
-    : TCPController(parent, QStringLiteral("gimbalTcpClient"), QStringLiteral("192.168.1.100"), 9000)
+    : XGimbalTcpController(parent, QStringLiteral("gimbalTcpClient"), QStringLiteral("192.168.2.36"), 9000)
+{
+    // The old shared control panel could have been repointed at the algorithm
+    // relay. That endpoint now has its own controller and settings group.
+    if ((tcpServerIP() == QStringLiteral("192.168.2.36") ||
+         tcpServerIP() == QStringLiteral("192.168.1.104")) && tcpServerPort() == 9001) {
+        setTcpServerPort(9000);
+    }
+}
+
+XGimbalTcpController::XGimbalTcpController(QObject* parent, const QString& settingsGroup,
+                                         const QString& defaultIP, int defaultPort)
+    : TCPController(parent, settingsGroup, defaultIP, defaultPort)
 {
     _statusText = tr("Disconnected");
 

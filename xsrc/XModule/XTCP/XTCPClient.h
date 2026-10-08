@@ -12,14 +12,13 @@
 //#include <QTcpSocket>           //通信套接字
 //#include <QAbstractSocket>
 
-#include "QGCToolbox.h"
 #include <qtimer.h>
 #include <QMetaEnum>
 
 #include <QtNetwork>
-#include "QGCLoggingCategory.h"
 #include "qloggingcategory.h"
-#include "VideoManager.h"
+
+class VideoManager;
 
 class TCPController;
 
