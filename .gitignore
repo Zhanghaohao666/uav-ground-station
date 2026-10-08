@@ -94,3 +94,15 @@ Qt*-linux*.tar.*
 node_modules/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+# Generated isolated test files
+tests/video_demand/Makefile
+tests/video_demand/actual_methods.inc
+tests/video_demand/stream_count.inc
+tests/video_demand/target_wrapper.sh
+tests/video_demand/demand_tests
+tests/board_recording/Makefile*
+tests/board_recording/recording_tests
+tests/board_recording/recording_ui_tests
+tests/board_recording/live_recording_smoke
+!tests/board_recording/ui_tests.cpp
+tests/board_recording/target_wrapper.sh

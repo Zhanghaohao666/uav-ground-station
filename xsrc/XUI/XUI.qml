@@ -176,6 +176,9 @@ Item {
         id: scriptTcpController
     }
 
+    XBoardRecordingController { id: boardRecordingController }
+    XBoardRecordingDialog { id: boardRecordingDialog; controller: boardRecordingController }
+
     XGimbalTcpController {
         id: gimbalTcpController
     }
@@ -327,6 +330,13 @@ Item {
             height: Math.max(_margin * 2.8, 40)
             radius: 6
             color: XGlobalColor.background2
+            XButtonLabel {
+                anchors.right: parent.right
+                anchors.rightMargin: mainHome._gap
+                anchors.verticalCenter: parent.verticalCenter
+                text: qsTr("板端录像")
+                onClicked: boardRecordingDialog.open()
+            }
             Row {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
@@ -348,6 +358,7 @@ Item {
                 }
                 XLabel {
                     anchors.verticalCenter: parent.verticalCenter
+                    visible: videoProfileBar.width > 820
                     text: videoProfileSettings.selectedMode === "custom" ? qsTr("当前：自定义地址") : qsTr("默认 MK22 地址；下视、D455i 保持原设置")
                     color: XGlobalColor.label2
                     small: true

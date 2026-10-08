@@ -22,11 +22,13 @@
     $$PWD/XModule/XTCP/CcTcpClient.h \
     $$PWD/XModule/XTCP/XTCPClient.h \
     $$PWD/XModule/XTCP/XGimbalTcpController.h \
-    $$PWD/XModule/XTCP/XScriptTcpController.h
+    $$PWD/XModule/XTCP/XScriptTcpController.h \
+    $$PWD/XModule/XTCP/XBoardRecordingController.h
 
     SOURCES += \
     $$PWD/XSingletons/XScreenToolsController.cc \
     $$PWD/XModule/XTCP/XTCPClient.cc \
     $$PWD/XModule/XTCP/XGimbalTcpController.cc \
-    $$PWD/XModule/XTCP/XScriptTcpController.cc
+    $$PWD/XModule/XTCP/XScriptTcpController.cc \
+    $$PWD/XModule/XTCP/XBoardRecordingController.cc
 }

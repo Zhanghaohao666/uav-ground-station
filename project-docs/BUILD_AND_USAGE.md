@@ -30,6 +30,8 @@ gimbal-ir 版增加第六路。profiles 版在视频页顶部提供“云台方�
 
 ## 回归
 
+新增板端录像见 [BOARD_RECORDING.md](BOARD_RECORDING.md)。新源文件、类型注册和 QML 资源已接入根工程；需要重新 qmake 并完整编译。
+
 含 `tests/video_demand` 的版本可在 Qt 5 Core/Test/Quick/QML 开发环境执行：
 
 ```sh

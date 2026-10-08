@@ -1,6 +1,6 @@
 # 无人机地面站
 
-当前源码标签：**v1.01.09-profiles — 云台 / 算法板一键视频方案**。基于用户提供的 `v1.01.09_fix_gimbal_tcp` Qt/QGroundControl 工程。
+当前源码标签：**v1.01.09-board-recording — 点击录像并保存到主控板**。基于用户提供的 `v1.01.09_fix_gimbal_tcp` Qt/QGroundControl 工程。
 
 **本仓库提供源码，不提供已经构建或验收的 Windows EXE。** 发布标签用于区分实际源码快照；未修改程序内部原有版本号。这些标签是在 2026-09-30 整理导入，表中日期为原快照日期，不代表当日已发布 GitHub。
 
@@ -13,10 +13,15 @@
 | [v1.01.09-on-demand](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-on-demand) | 2026-09-29 | 五路按需拉流 |
 | [v1.01.09-gimbal-ir](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-gimbal-ir) | 2026-09-29 | 六路视频与云台红外 |
 | [v1.01.09-profiles](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-profiles) | 2026-09-30 | 云台 / 算法板一键视频方案 |
+| [v1.01.09-board-recording](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-board-recording) | 2026-10-08 | 板端多路录像与实际状态 |
 
 查看 [完整变化记录](CHANGELOG.md)、[已知问题](project-docs/KNOWN_ISSUES.md) 和 [构建、接线与使用说明](project-docs/BUILD_AND_USAGE.md)。GitHub Releases 每个版本可下载对应 Source code (zip)。最新开发源码在 main。
 
 ## 当前版本内容
+
+- 新增“板端录像”：单选/多选、开始/追加、停止所选/全部、真实状态及保存目录；配套主控 v1.3.0，104 已安装。
+- 录像和预览独立；关闭窗口、切方案、断网、退出地面站均不停止录像。首次连接用主控 IP 和独立连接码。
+- 保存到主控 `/data/uav-recordings`，原电脑本地录像保留。见 [使用说明](project-docs/BOARD_RECORDING.md)。
 
 - 视频页新增“云台方案”“算法板方案”按钮，自动替换载荷地址与标题并拉取新流。
 - 下视 MIPI 与 D455i 的地址、手动开关选择和接收器对象保持不变。
@@ -25,7 +30,7 @@
 - 载荷全屏时切方案回到多画面；公共相机全屏则保持全屏，退出后展示新载荷画面。
 - 视频方案不切换板端运行模式，也不自动切换控制 TCP 目标。
 
-验证：27 项 Qt 隔离测试通过（含初始化/清理），使用真实 VideoManager 方法体和方案 JS；QML 语法检查通过。完整 Windows EXE 尚未构建。
+验证：原 Qt 视频逻辑 27 项、新控制器 8 项、实际 QML 面板 3 项测试通过，各含初始化/清理。104 已用生产 Qt 控制器完成实板录像联调。完整 Windows EXE 尚未构建。
 
 ## 板端部署
 

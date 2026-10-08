@@ -11,9 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install isolated test dependencies
-        run: sudo apt-get update && sudo apt-get install -y qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools
+        run: sudo apt-get update && sudo apt-get install -y qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2
       - name: Check QML syntax
-        run: qmllint xsrc/XUI/XUI.qml
+        run: qmllint xsrc/XUI/XUI.qml xsrc/XUI/XBoardRecordingDialog.qml
       - name: Compile real video lifecycle methods and preset JS with fake receivers
         working-directory: tests/video_demand
         run: |
@@ -21,3 +21,12 @@ jobs:
           qmake demand.pro
           make -j2
           QT_QPA_PLATFORM=offscreen ./demand_tests
+      - name: Compile real board recorder controller and QML panel
+        working-directory: tests/board_recording
+        run: |
+          qmake recording.pro
+          make -j2
+          ./recording_tests
+          qmake ui.pro -o Makefile.ui
+          make -f Makefile.ui -j2
+          QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software ./recording_ui_tests

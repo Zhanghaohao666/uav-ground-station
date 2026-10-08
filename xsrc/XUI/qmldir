@@ -46,6 +46,7 @@ singleton XGlobalColor      1.0	XGlobalColor.qml
 singleton XScreenTool      1.0   XScreenTool.qml
 
 #====================== 实例 =======================
+XBoardRecordingDialog 1.0 XBoardRecordingDialog.qml
 XUI     1.0 XUI.qml
 Splash  1.0 Splash.qml
 XStatusBar 1.0 XStatusBar.qml
