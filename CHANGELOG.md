@@ -2,7 +2,7 @@
 
 以下“通过”仅指写明的验证范围。版本按原始源码快照重建，不伪造原提交日期。
 
-## Windows 自动编译与打包
+## v1.01.09-windows — Windows 自动编译与运行包
 
 修改日期：2026-10-12；基于 v1.01.09-dual-control，原源码标签不变。
 
@@ -11,6 +11,8 @@
 - Windows 程序优先使用随包提供的 GStreamer 插件扫描器；无需在使用者电脑上单独安装 GStreamer。
 - 根目录 `VERSION` 改名为 `SOURCE_VERSION.txt`，避免 Windows 不区分大小写时误遮盖 C++ 标准头文件 `<version>`。
 - 提供 [操作说明](project-docs/WINDOWS_AUTO_BUILD.md)。构建不连接或修改板卡；实际 MK22 视频、控制及录像仍需现场验证。
+
+验证：提交 `d00cb39a3e0ba760d3ec751fed5d1a861082651e` 在 [GitHub Windows 构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/38196731143) 完整编译、RTSP/H264 插件检查及 Qt 主窗口创建/可见/30 秒存活检查通过；下载 ZIP 完整性、x64 EXE、版本提交和上传/下载 SHA256 一致性通过。运行包发布到 [固定版本](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-windows)。后文未构建 EXE 的说明保留各历史源码版本当时的验证范围。
 
 ## v1.01.09-dual-control — 算法板控制与默认地址修复
 

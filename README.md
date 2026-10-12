@@ -1,6 +1,8 @@
 # 无人机地面站
 
-当前源码标签：**v1.01.09-dual-control — 独立算法板控制与公共视频地址修复**。基于用户提供的 `v1.01.09_fix_gimbal_tcp` Qt/QGroundControl 工程。
+当前发布：**v1.01.09-windows — Windows x64 可运行包**。功能基于 v1.01.09-dual-control（独立算法板控制与公共视频地址修复），原工程为用户提供的 `v1.01.09_fix_gimbal_tcp` Qt/QGroundControl 工程。
+
+**直接运行请下载 [Windows 完整 ZIP](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.09-windows/NexusGround-Windows-x64_v1.01.09-windows_20261012.zip)**，完整解压后运行 `NexusGround.exe`，保留所有 DLL/QML/视频插件。无需安装 Qt、GStreamer 或编译器。原版可以保留；启动新版前关闭旧程序。
 
 发布标签用于区分实际源码快照；未修改程序内部原有版本号。这些标签是在 2026-09-30 整理导入，表中日期为原快照日期，不代表当日已发布 GitHub。新版支持在 GitHub 手动生成 Windows x64 运行包，详见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。只有成功的构建才提供完整运行包；现场视频、控制和录像仍需验收。
 
@@ -15,6 +17,7 @@
 | [v1.01.09-profiles](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-profiles) | 2026-09-30 | 云台 / 算法板一键视频方案 |
 | [v1.01.09-board-recording](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-board-recording) | 2026-10-08 | 板端多路录像与实际状态 |
 | [v1.01.09-dual-control](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-dual-control) | 2026-10-08 | 默认地址修复、独立云台/算法板控制 |
+| [v1.01.09-windows](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-windows) | 2026-10-12 | 首次 Windows x64 完整包、自动编译及启动检查 |
 
 查看 [完整变化记录](CHANGELOG.md)、[已知问题](project-docs/KNOWN_ISSUES.md) 和 [构建、接线与使用说明](project-docs/BUILD_AND_USAGE.md)。GitHub Releases 每个版本可下载对应 Source code (zip)。最新开发源码在 main。
 
@@ -34,7 +37,7 @@
 - 载荷全屏时切方案回到多画面；公共相机全屏则保持全屏，退出后展示新载荷画面。
 - 视频方案不切换板端运行模式；同时选择对应控制面板，不改动或自动连接两个独立控制通道。
 
-验证：Qt 视频逻辑与地址路由 32 项、生产 TCP 双控制器与实际控制面板 6 项、板端录像控制器 8 项及录像 QML 面板 3 项通过，各含初始化/清理。104 已完成此前板端录像实测及算法控制通道被动回传检查；本版新增控制 UI 使用本机真实 TCP 测试服务验证，没有向在用板卡发送测试动作。完整 Windows EXE 尚未构建。
+验证：Qt 视频逻辑与地址路由 32 项、生产 TCP 双控制器与实际控制面板 6 项、板端录像控制器 8 项及录像 QML 面板 3 项通过，各含初始化/清理。104 已完成此前板端录像实测及算法控制通道被动回传检查；新增控制 UI 使用本机真实 TCP 测试服务验证。2026-10-12 的 [Windows 构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/38196731143) 已通过完整编译、RTSP/H264 插件检查及 Qt 主窗口创建/可见/30 秒存活检查，实际 Windows 电脑上的板端拉流、控制和 MK22 联调仍需现场验收。
 
 ## 板端部署
 

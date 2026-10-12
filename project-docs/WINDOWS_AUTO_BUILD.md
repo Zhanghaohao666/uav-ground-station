@@ -2,6 +2,8 @@
 
 仓库提供手动触发的 **Windows 可运行包** 工作流，在 GitHub 的 Windows 机器上准备 Qt 5.15.2、Visual Studio x64 和 GStreamer 1.18.6，编译根工程 `abdgcs.pro`。你的电脑不需要安装 Qt 或编译器。
 
+第一次完整编译和 Qt 主窗口启动检查已通过，直接使用可下载 [v1.01.09-windows 固定版本](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-windows) 中的 Windows ZIP。此附件独立于 Actions 的 30 天临时文件保留期；[成功运行记录](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/38196731143) 对应构建提交 `d00cb39a3e0ba760d3ec751fed5d1a861082651e`。
+
 ## 点击运行和下载
 
 1. 登录 GitHub，打开 [Windows 可运行包](https://github.com/Zhanghaohao666/uav-ground-station/actions/workflows/windows-package.yml)。

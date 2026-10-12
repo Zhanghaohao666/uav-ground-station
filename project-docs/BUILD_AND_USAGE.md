@@ -2,9 +2,11 @@
 
 ## 构建
 
+只有原版 EXE、没有编译环境时，直接下载 [v1.01.09-windows 运行包](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-windows)，完整解压后运行 `NexusGround.exe`。需要根据以后更新的源码重新生成时，按 [GitHub Windows 自动编译说明](WINDOWS_AUTO_BUILD.md) 手动运行工作流。
+
 使用原项目 Windows Qt 5.15、对应编译器及 GStreamer 开发/运行环境，打开根目录 `abdgcs.pro`，重新运行 qmake 并完整构建，再按原部署方式打包 Qt/QML/GStreamer 依赖。只复制源码到旧 EXE 旁不会生效。新版使用 Qt.labs.settings，打包时包含对应 QML 模块。
 
-当前 Linux 工作环境缺少 location、positioning、quickcontrols2、svg、texttospeech、multimedia、serialport 等完整 Qt 模块及 GStreamer 开发库，完整应用尚未构建。隔离视频逻辑测试不能替代完整编译。源码目录已包含原快照第三方目录，原 Android 签名文件没有公开；Android 发布需要自己的签名配置。
+当前 Linux 工作环境没有构建完整应用；Windows 完整编译及启动检查已于 2026-10-12 在 GitHub 通过。隔离视频逻辑测试不能替代完整编译，也不能代替现场硬件联调。源码目录已包含原快照第三方目录，原 Android 签名文件没有公开；Android 发布需要自己的签名配置。
 
 ## 视频地址（MK22 默认主控 192.168.2.36）
 

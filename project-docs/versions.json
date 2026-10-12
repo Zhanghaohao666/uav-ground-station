@@ -70,5 +70,19 @@
     ],
     "tests": "27 项 Qt 隔离测试通过（含初始化/清理），使用真实 VideoManager 方法体和方案 JS；QML 语法检查通过。完整 Windows EXE 尚未构建。",
     "original_archive_sha256": "b73da97ca306aeebc2e602272d8f79ef3e033b5fcf909c8645382ddbd520348c"
+  },
+  {
+    "tag": "v1.01.09-windows",
+    "archive": "NexusGround-Windows-x64_v1.01.09-windows_20261012.zip",
+    "date": "2026-10-12",
+    "title": "首次 Windows x64 可运行包",
+    "features": [
+      "基于 dual-control，保留视频方案切换、按需拉流、双控制和板端录像。",
+      "手动 GitHub Windows 自动编译、完整运行库及视频插件打包。",
+      "修复 VERSION 文件遮盖标准头的问题，增加原生 Qt 窗口启动检查。"
+    ],
+    "tests": "Windows 全工程编译、RTSP/H264 插件、Qt 主窗口创建/可见/30 秒存活通过。ZIP 完整性、x64 与 SHA256 一致通过；实板/MK22 仍需现场验收。",
+    "build_commit": "d00cb39a3e0ba760d3ec751fed5d1a861082651e",
+    "windows_archive_sha256": "927c6cefcd5cbb9a7e7199ece512747f980b7bc9a03a0a1b7ee3368fc3aef523"
   }
 ]
