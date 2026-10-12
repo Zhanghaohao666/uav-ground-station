@@ -21,7 +21,7 @@ foreach ($package in $packages) {
     $log = Join-Path $downloads ($name + '.log')
     $process = Start-Process msiexec.exe -ArgumentList @(
         '/i', ('"' + $file + '"'), '/qn', '/norestart',
-        'ADDLOCAL=ALL', 'INSTALLDIR=C:\gstreamer\1.0\msvc_x86_64',
+        'ADDLOCAL=ALL', 'INSTALLDIR=C:\gstreamer',
         '/l*v', ('"' + $log + '"')
     ) -Wait -PassThru
     if ($process.ExitCode -notin @(0, 3010)) { throw "安装 $name 失败：$($process.ExitCode)" }
