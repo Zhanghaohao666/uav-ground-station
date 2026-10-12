@@ -7,7 +7,7 @@ try {
     # Keep the full source tag in APP_VERSION_STR. Windows file VERSION must
     # contain only numbers, unlike our descriptive Git tags.
     & qmake -r "$source\abdgcs.pro" 'CONFIG+=release' 'CONFIG+=StableBuild' `
-        -after 'VERSION=1.1.9' 'QMAKE_CXXFLAGS_WARN_ON+=/WX-' 'QMAKE_CFLAGS_WARN_ON+=/WX-' `
+        -after 'VERSION=1.1.9' 'QMAKE_CXXFLAGS_WARN_ON-=/WX' 'QMAKE_CFLAGS_WARN_ON-=/WX' `
         2>&1 | Tee-Object -FilePath "$build\qmake.log"
     if ($LASTEXITCODE -ne 0) { throw "qmake 失败：$LASTEXITCODE" }
     if (-not (Select-String "$build\qmake.log" -Pattern 'Including support for video streaming' -Quiet)) {

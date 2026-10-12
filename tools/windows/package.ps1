@@ -89,7 +89,9 @@ $process = Start-Process $exe -WorkingDirectory $package -ArgumentList '--log-ou
     -RedirectStandardOutput "$build\startup-stdout.log" -RedirectStandardError "$build\startup-stderr.log" -PassThru
 try {
     Start-Sleep -Seconds 20
+    $process.Refresh()
     if ($process.HasExited) { throw "启动检查失败，程序提前退出：$($process.ExitCode)" }
+    if ($process.MainWindowHandle -eq 0) { throw '启动检查失败：未创建地面站主窗口' }
 } finally {
     if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
 }

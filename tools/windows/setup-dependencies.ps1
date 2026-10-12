@@ -4,7 +4,7 @@ New-Item -ItemType Directory -Force -Path $downloads | Out-Null
 
 function Get-VerifiedFile([string]$Uri, [string]$Name, [string]$Sha256) {
     $path = Join-Path $downloads $Name
-    Invoke-WebRequest -Uri $Uri -OutFile $path
+    Invoke-WebRequest -Uri $Uri -OutFile $path -TimeoutSec 300 -MaximumRetryCount 2 -RetryIntervalSec 5
     $actual = (Get-FileHash $path -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($actual -ne $Sha256) { throw "下载校验失败：$Name" }
     return $path

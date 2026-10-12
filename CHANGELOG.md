@@ -9,6 +9,7 @@
 - 新增手动触发的 GitHub Windows x64 工作流，准备 Qt 5.15.2、Visual Studio 和 GStreamer 1.18.6，编译实际工程 `abdgcs.pro`。
 - 完整运行包包含 Qt/QML、视频插件、运行库和版本信息；生成前检查视频支持、RTSP/H264 插件以及 EXE 启动。源码标签不是 EXE 验收记录。
 - Windows 程序优先使用随包提供的 GStreamer 插件扫描器；无需在使用者电脑上单独安装 GStreamer。
+- 根目录 `VERSION` 改名为 `SOURCE_VERSION.txt`，避免 Windows 不区分大小写时误遮盖 C++ 标准头文件 `<version>`。
 - 提供 [操作说明](project-docs/WINDOWS_AUTO_BUILD.md)。构建不连接或修改板卡；实际 MK22 视频、控制及录像仍需现场验证。
 
 ## v1.01.09-dual-control — 算法板控制与默认地址修复
