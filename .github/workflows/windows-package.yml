@@ -1,0 +1,69 @@
+name: Windows 可运行包
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-package-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: 获取源码
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: 准备 Qt 5.15.2
+        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4
+        with:
+          version: '5.15.2'
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          dir: ${{ runner.temp }}
+          modules: qtcharts
+          cache: true
+
+      - name: 准备 Visual Studio x64
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
+        with:
+          arch: x64
+
+      - name: 准备视频库和构建工具
+        run: ./tools/windows/setup-dependencies.ps1
+
+      - name: 编译新版地面站
+        run: ./tools/windows/build.ps1
+
+      - name: 打包及启动检查
+        run: ./tools/windows/package.ps1
+
+      - name: 上传完整 Windows 运行包
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: NexusGround-Windows-x64
+          path: ${{ runner.temp }}/gcs-package/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: 保存构建日志
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Windows-build-logs
+          path: |
+            ${{ runner.temp }}/gcs-build/*.log
+            ${{ runner.temp }}/gcs-downloads/*.log
+          if-no-files-found: ignore
+          retention-days: 14

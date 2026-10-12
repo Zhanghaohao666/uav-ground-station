@@ -2,7 +2,7 @@
 
 当前源码标签：**v1.01.09-dual-control — 独立算法板控制与公共视频地址修复**。基于用户提供的 `v1.01.09_fix_gimbal_tcp` Qt/QGroundControl 工程。
 
-**本仓库提供源码，不提供已经构建或验收的 Windows EXE。** 发布标签用于区分实际源码快照；未修改程序内部原有版本号。这些标签是在 2026-09-30 整理导入，表中日期为原快照日期，不代表当日已发布 GitHub。
+发布标签用于区分实际源码快照；未修改程序内部原有版本号。这些标签是在 2026-09-30 整理导入，表中日期为原快照日期，不代表当日已发布 GitHub。新版支持在 GitHub 手动生成 Windows x64 运行包，详见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。只有成功的构建才提供完整运行包；现场视频、控制和录像仍需验收。
 
 ## 版本导航
 
@@ -44,4 +44,4 @@
 
 原始 QGroundControl README 保存在 [README_UPSTREAM.md](README_UPSTREAM.md)，许可证及第三方声明保留原文件。此仓库不代表上游官方发布。
 
-Android 签名文件、旧摄像头 URL 中的口令及第三方测试私钥未进入公开历史；原始本地压缩包保留。因此公开源码不是原 ZIP 的逐字节副本。原上游 CI 移至 `.github/upstream-workflows/` 仅供参考，避免误触发旧项目的打包/上传任务；不会自动生成 Windows 安装包。
+Android 签名文件、旧摄像头 URL 中的口令及第三方测试私钥未进入公开历史；原始本地压缩包保留。因此公开源码不是原 ZIP 的逐字节副本。原上游 CI 移至 `.github/upstream-workflows/` 仅供参考。新的 Windows 工作流只在手动触发时编译、打包并检查启动，上传完整 ZIP，不生成安装器。

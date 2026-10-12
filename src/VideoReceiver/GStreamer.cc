@@ -15,6 +15,7 @@
  */
 
 #include <QDebug>
+#include <QFile>
 
 #include "GStreamer.h"
 #include "GstVideoReceiver.h"
@@ -182,6 +183,10 @@ GStreamer::initialize(int argc, char* argv[], int debuglevel)
 #elif defined(Q_OS_WIN)
     QString currentDir = QCoreApplication::applicationDirPath();
     qgcputenv("GST_PLUGIN_PATH", currentDir, "/gstreamer-plugins");
+    // The Windows portable package includes its own plugin scanner.
+    if (QFile::exists(currentDir + "/gst-plugin-scanner.exe")) {
+        qgcputenv("GST_PLUGIN_SCANNER", currentDir, "/gst-plugin-scanner.exe");
+    }
 #endif
 
     //-- If gstreamer debugging is not configured via environment then use internal QT logging
