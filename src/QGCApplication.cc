@@ -614,6 +614,20 @@ bool QGCApplication::_initForNormalAppBoot()
 
     QQuickWindow* rootWindow = qgcApp()->mainRootWindow();
 
+    // Only the automated package check requests a startup report. Inspect
+    // the actual Qt window because service sessions may hide HWNDs from .NET.
+    const QString startupReport = qEnvironmentVariable("QGC_CI_STARTUP_REPORT");
+    if (!startupReport.isEmpty()) {
+        QTimer::singleShot(2000, this, [this, startupReport]() {
+            QQuickWindow* window = mainRootWindow();
+            QFile report(startupReport);
+            if (report.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                report.write(window ? "root_window_created=true\n" : "root_window_created=false\n");
+                report.write(window && window->isVisible() ? "window_visible=true\n" : "window_visible=false\n");
+            }
+        });
+    }
+
     if (rootWindow) {
         rootWindow->scheduleRenderJob (new FinishVideoInitialization (toolbox()->videoManager()),
                 QQuickWindow::BeforeSynchronizingStage);

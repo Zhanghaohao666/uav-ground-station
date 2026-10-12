@@ -20,6 +20,7 @@
 #include <QStringListModel>
 #include <QtConcurrent>
 #include <QTextStream>
+#include <cstdio>
 
 Q_GLOBAL_STATIC(AppLogModel, debug_model)
 
@@ -37,6 +38,11 @@ static void msgHandler(QtMsgType type, const QMessageLogContext &context, const 
 
     if (old_handler != nullptr) {
         old_handler(type, context, msg);
+    } else if (qEnvironmentVariableIsSet("QGC_CI_STDERR_LOG")) {
+        // GUI builds normally write to the application log model. CI also
+        // needs stderr so QML load failures remain visible in build logs.
+        std::fprintf(stderr, "[%s] %s\n", context.category, msg.toUtf8().constData());
+        std::fflush(stderr);
     }
     if( type == QtFatalMsg ) abort();
 }

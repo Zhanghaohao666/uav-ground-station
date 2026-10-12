@@ -82,18 +82,25 @@ MK22 默认主控 192.168.2.36；Wi-Fi 调试使用 192.168.1.104。
 
 # An isolated startup check catches missing DLLs/QML. It is not a live flight test.
 $env:QT_OPENGL = 'software'
+$env:QGC_CI_STDERR_LOG = '1'
+$env:QGC_CI_STARTUP_REPORT = Join-Path $build 'startup-report.log'
 $env:APPDATA = Join-Path $build 'smoke-appdata'
 $env:LOCALAPPDATA = Join-Path $build 'smoke-localappdata'
 New-Item -ItemType Directory -Force $env:APPDATA, $env:LOCALAPPDATA | Out-Null
 $process = Start-Process $exe -WorkingDirectory $package -ArgumentList '--log-output' `
     -RedirectStandardOutput "$build\startup-stdout.log" -RedirectStandardError "$build\startup-stderr.log" -PassThru
 try {
-    Start-Sleep -Seconds 20
+    Start-Sleep -Seconds 30
     $process.Refresh()
     if ($process.HasExited) { throw "启动检查失败，程序提前退出：$($process.ExitCode)" }
-    if ($process.MainWindowHandle -eq 0) { throw '启动检查失败：未创建地面站主窗口' }
+    $report = Get-Content $env:QGC_CI_STARTUP_REPORT -Raw -ErrorAction SilentlyContinue
+    if ($report -notmatch 'root_window_created=true' -or $report -notmatch 'window_visible=true') {
+        throw '启动检查失败：Qt 未创建可见的地面站主窗口，请查看启动日志'
+    }
 } finally {
     if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+    Get-ChildItem (Join-Path $env:USERPROFILE 'Documents') -Filter 'QGCConsole.log' -Recurse -ErrorAction SilentlyContinue |
+        Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName "$build\startup-console.log" -Force }
 }
 $logs = (Get-Content "$build\startup-stdout.log", "$build\startup-stderr.log" -Raw -ErrorAction SilentlyContinue) -join "`n"
 if ($logs -match 'QQmlApplicationEngine failed to load component|module "[^"]+" is not installed|Failed to create OpenGL context|unable to find qmlglsink') {
