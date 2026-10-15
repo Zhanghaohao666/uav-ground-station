@@ -1,0 +1,28 @@
+name: Windows released video regression
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  reproduce:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Download the exact reported release
+        run: |
+          Invoke-WebRequest 'https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.09-windows/NexusGround-Windows-x64_v1.01.09-windows_20261012.zip' -OutFile "$env:RUNNER_TEMP/released.zip"
+          if ((Get-FileHash "$env:RUNNER_TEMP/released.zip").Hash.ToLowerInvariant() -ne '927c6cefcd5cbb9a7e7199ece512747f980b7bc9a03a0a1b7ee3368fc3aef523') { throw 'Release checksum mismatch' }
+          Expand-Archive "$env:RUNNER_TEMP/released.zip" "$env:RUNNER_TEMP/released"
+      - name: Exercise actual released client
+        run: ./tools/windows/repro-video.ps1 -Package "$env:RUNNER_TEMP/released/NexusGround"
+      - name: Save video evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Windows-video-repro
+          path: ${{ runner.temp }}/video-repro/
+          if-no-files-found: error
