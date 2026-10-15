@@ -8,6 +8,9 @@ from pathlib import Path
 
 def run(package, transport):
     package = Path(package).resolve()
+    # Python is outside the portable EXE's directory. Match the EXE's normal
+    # DLL lookup for GLib's LoadLibrary calls and the external plugin scanner.
+    os.environ['PATH'] = str(package) + os.pathsep + os.environ.get('PATH', '')
     dll_dir = os.add_dll_directory(str(package))
     gst = c.CDLL(str(package / "gstreamer-1.0-0.dll"))
     app = c.CDLL(str(package / "gstapp-1.0-0.dll"))

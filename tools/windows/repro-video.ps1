@@ -6,6 +6,12 @@ $server = Start-Process python -ArgumentList @('-u', "$env:GITHUB_WORKSPACE/test
 try {
     Start-Sleep 2
     if ($server.HasExited) { throw 'RTSP fixture did not start' }
+    foreach ($script in @('video-diagnostics.ps1', 'repro-video.ps1')) {
+        $tokens = $null
+        $parseErrors = $null
+        [System.Management.Automation.Language.Parser]::ParseFile("$env:GITHUB_WORKSPACE/tools/windows/$script", [ref]$tokens, [ref]$parseErrors) | Out-Null
+        if ($parseErrors.Count) { throw "PowerShell parse error in $script : $parseErrors" }
+    }
     $env:GST_PLUGIN_PATH_1_0 = "$Package/gstreamer-plugins"
     $env:GST_PLUGIN_SYSTEM_PATH_1_0 = "$Package/gstreamer-plugins"
     $env:GST_PLUGIN_SCANNER_1_0 = "$Package/gst-plugin-scanner.exe"
