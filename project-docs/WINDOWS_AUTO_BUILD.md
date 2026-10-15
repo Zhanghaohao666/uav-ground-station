@@ -4,6 +4,10 @@
 
 第一次完整编译和 Qt 主窗口启动检查已通过，直接使用可下载 [v1.01.09-windows 固定版本](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-windows) 中的 Windows ZIP。此附件独立于 Actions 的 30 天临时文件保留期；[成功运行记录](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/38196731143) 对应构建提交 `d00cb39a3e0ba760d3ec751fed5d1a861082651e`。
 
+2026-10-15：已收到同一电脑、同一 RTSP 地址下旧版可以播放而该运行包没有画面的反馈，现场故障尚未确认修复。新增 [视频诊断工具（约 3 KB，不含 EXE）](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.09-windows/NexusGround-Video-Diagnostics_20261015.zip)，完整解压到 `NexusGround.exe` 同目录后，按附件说明运行正常诊断或原生 OpenGL＋软件解码入口。日志保存在 EXE 旁的 `video-diagnostics`。工具不修改板端服务，也不是新编译的修复版。
+
+[Windows 复现实验](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/38709949893) 使用原运行包 DLL，通过 TCP、UDP 各接收并解码 10 帧生成的测试画面；实际 EXE 的出图验证未通过，测试环境存在图形后端限制。该结果不能代替现场 Windows/MK22 的播放验收。
+
 ## 点击运行和下载
 
 1. 登录 GitHub，打开 [Windows 可运行包](https://github.com/Zhanghaohao666/uav-ground-station/actions/workflows/windows-package.yml)。
