@@ -12,6 +12,6 @@ ffmpeg -f lavfi -i testsrc2=size=320x240:rate=10 -t 2 \
 
 `tools/windows/repro-video.ps1` runs the actual application with this stream
 under three OpenGL choices and saves receiver and GStreamer logs. The script
-resets the hosted runner's NexusGround registry settings; run it only in CI.
+resets the hosted runner's NexusGround INI settings; run it only in CI.
 The released-video workflow first checks the original release archive's hash.
 These checks do not replace a Windows/MK22 field test.

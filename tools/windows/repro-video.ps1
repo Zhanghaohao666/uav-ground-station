@@ -9,14 +9,20 @@ try {
     foreach ($renderer in @('default', 'desktop', 'software')) {
         $dir = Join-Path $out $renderer
         New-Item -ItemType Directory -Force $dir | Out-Null
-        # Hosted runner only: a clean profile with an explicitly enabled RTSP stream.
-        $key = 'HKCU:\Software\QGroundControl.org\NexusGround'
-        Remove-Item $key -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item "$key\Video" -Force | Out-Null
-        New-ItemProperty "$key\Video" videoSource -Value 'RTSP Video Stream' -Force | Out-Null
-        New-ItemProperty "$key\Video" streamEnabled -Value 'true' -Force | Out-Null
-        New-ItemProperty "$key\Video" rtspUrl -Value 'rtsp://127.0.0.1:18554/test' -Force | Out-Null
-        New-ItemProperty "$key\Video" forceVideoDecoder -Value '1' -Force | Out-Null
+        # Hosted runner only: this application explicitly uses INI, not registry.
+        $settingsDir = Join-Path $env:APPDATA 'QGroundControl.org'
+        New-Item -ItemType Directory -Force $settingsDir | Out-Null
+        @'
+[General]
+SettingsVersion=9
+[Video]
+videoSource=RTSP Video Stream
+streamEnabled=true
+rtspUrl=rtsp://127.0.0.1:18554/test
+forceVideoDecoder=1
+[VideoDemand]
+requestedStreamMask=1
+'@ | Set-Content "$settingsDir/NexusGround.ini" -Encoding utf8NoBOM
         $env:QGC_CI_STDERR_LOG = '1'
         $env:QT_LOGGING_TO_CONSOLE = '1'
         $env:QT_LOGGING_RULES = 'VideoManagerLog.debug=true;VideoReceiverLog.debug=true;GStreamerLog.debug=true'
@@ -28,7 +34,7 @@ try {
         else { $env:QT_OPENGL = $renderer }
         $process = Start-Process "$Package/NexusGround.exe" -WorkingDirectory $Package -ArgumentList @('--log-output', '--logging:VideoAllLog') -PassThru -RedirectStandardOutput "$dir/stdout.log" -RedirectStandardError "$dir/stderr.log"
         try {
-            Start-Sleep 20
+            Start-Sleep 40
             $process.Refresh()
             @{renderer=$renderer; exited=$process.HasExited; exit_code=$process.ExitCode} | ConvertTo-Json | Set-Content "$dir/process.json"
         } finally {
@@ -36,6 +42,7 @@ try {
         }
         Get-ChildItem (Join-Path $env:USERPROFILE 'Documents') -Filter QGCConsole.log -Recurse -ErrorAction SilentlyContinue |
             ForEach-Object { Copy-Item $_.FullName "$dir/console.log" -Force }
+        Copy-Item "$settingsDir/NexusGround.ini" "$dir/settings.ini" -Force
     }
 } finally {
     if (-not $server.HasExited) { Stop-Process -Id $server.Id -Force }
