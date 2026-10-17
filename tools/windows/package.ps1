@@ -56,6 +56,9 @@ foreach ($plugin in @('rtspsrc', 'rtph264depay', 'h264parse', 'avdec_h264')) {
 foreach ($file in @('Qt5Core.dll', 'Qt5Quick.dll', 'Qt5Network.dll', 'platforms\qwindows.dll', 'Qt\labs\settings\qmldir')) {
     if (-not (Test-Path (Join-Path $package $file))) { throw "运行包缺少：$file" }
 }
+& "$source\tools\windows\test-portable-environment.ps1" -Package $package `
+    -Probe "$build\video-probe\release\environment_probe.exe" -OutputDirectory "$build\portable-video"
+
 $info = [ordered]@{
     source_commit = (& git -C $source rev-parse HEAD).Trim()
     source_version = (& git -C $source describe --tags --always).Trim()
@@ -64,11 +67,15 @@ $info = [ordered]@{
     gstreamer_version = '1.18.6'
     architecture = 'Windows x64'
     built_at_utc = [DateTime]::UtcNow.ToString('o')
+    portable_video_environment_isolation = $true
+    native_h264_tcp_udp_decoded_frames_each = 10
+    customer_pc_direct_exe_playback_verified = $false
     board_and_mk22_live_tested = $false
 }
 $info | ConvertTo-Json | Set-Content "$package\BUILD_INFO.json" -Encoding utf8
 Copy-Item -Path @("$source\COPYING.md", "$source\CHANGELOG.md") -Destination $package
 Copy-Item "$source\project-docs" "$package\使用说明" -Recurse
+Copy-Item -Path @("$source\tools\windows\Video-Diagnostics.cmd", "$source\tools\windows\Video-Compatible.cmd", "$source\tools\windows\video-diagnostics.ps1") -Destination $package
 @'
 新版地面站 Windows x64 运行包
 
@@ -77,11 +84,20 @@ Copy-Item "$source\project-docs" "$package\使用说明" -Recurse
 视频页可选择“云台方案”或“算法板方案”；载荷控制分别连接 9000/9001。
 MK22 默认主控 192.168.2.36；Wi-Fi 调试使用 192.168.1.104。
 版本和源码提交见 BUILD_INFO.json，功能说明见“使用说明”。
-此构建需要现场验证 Windows 视频播放、载荷控制和板端录像。
+Windows EXE 已内置本包视频插件路径及独立缓存，无需诊断脚本设置环境。
+本包是启动环境候选修复，需在你的电脑上直接双击 EXE 验证视频。
+若仍无画面，运行随包 Video-Diagnostics.cmd 并保留 video-diagnostics 日志。
+此构建仍需现场验证 Windows 视频播放、载荷控制和板端录像。
 '@ | Set-Content "$package\请先阅读.txt" -Encoding utf8
 
 # An isolated startup check catches missing DLLs/QML. It is not a live flight test.
 $env:QT_OPENGL = 'software'
+# Launch the EXE directly with conflicting inherited values. Its own startup
+# must isolate these without a diagnostic launcher doing the work for it.
+foreach ($variable in @('GST_PLUGIN_PATH', 'GST_PLUGIN_PATH_1_0', 'GST_PLUGIN_SYSTEM_PATH', 'GST_PLUGIN_SYSTEM_PATH_1_0', 'GST_PLUGIN_SCANNER', 'GST_PLUGIN_SCANNER_1_0', 'GST_REGISTRY', 'GST_REGISTRY_1_0')) {
+    [Environment]::SetEnvironmentVariable($variable, 'C:/missing-other-gstreamer', 'Process')
+}
+Remove-Item Env:QGC_GST_REGISTRY -ErrorAction SilentlyContinue
 $env:QGC_CI_STDERR_LOG = '1'
 $env:QGC_CI_STARTUP_REPORT = Join-Path $build 'startup-report.log'
 $env:APPDATA = Join-Path $build 'smoke-appdata'
@@ -96,6 +112,9 @@ try {
     $report = Get-Content $env:QGC_CI_STARTUP_REPORT -Raw -ErrorAction SilentlyContinue
     if ($report -notmatch 'root_window_created=true' -or $report -notmatch 'window_visible=true') {
         throw '启动检查失败：Qt 未创建可见的地面站主窗口，请查看启动日志'
+    }
+    if ($report -notmatch 'portable_video_environment=true') {
+        throw 'Direct EXE startup did not isolate its video environment'
     }
 } finally {
     if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }

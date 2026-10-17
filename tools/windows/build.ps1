@@ -17,3 +17,21 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "编译失败：$LASTEXITCODE" }
     if (-not (Test-Path "$build\staging\NexusGround.exe")) { throw '未生成 NexusGround.exe' }
 } finally { Pop-Location }
+
+# Compile the same environment setup used by the production EXE, and exercise
+# conflicting inherited paths plus fresh/warm application caches.
+foreach ($test in @('environment', 'probe')) {
+    $testBuild = Join-Path $build ("video-$test")
+    New-Item -ItemType Directory -Force $testBuild | Out-Null
+    Push-Location $testBuild
+    try {
+        & qmake "$source\tests\video_environment\$test.pro" 'CONFIG+=release'
+        if ($LASTEXITCODE -ne 0) { throw "Video environment qmake failed: $test" }
+        & jom -j2
+        if ($LASTEXITCODE -ne 0) { throw "Video environment build failed: $test" }
+        if ($test -eq 'environment') {
+            & "$testBuild\release\environment_tests.exe"
+            if ($LASTEXITCODE -ne 0) { throw 'Video environment regression failed' }
+        }
+    } finally { Pop-Location }
+}

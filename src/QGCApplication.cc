@@ -17,6 +17,7 @@
  */
 
 #include <QFile>
+#include <QStandardPaths>
 #include <QRegularExpression>
 #include <QFontDatabase>
 #include <QQuickWindow>
@@ -624,6 +625,22 @@ bool QGCApplication::_initForNormalAppBoot()
             if (report.open(QIODevice::WriteOnly | QIODevice::Text)) {
                 report.write(window ? "root_window_created=true\n" : "root_window_created=false\n");
                 report.write(window && window->isVisible() ? "window_visible=true\n" : "window_visible=false\n");
+#if defined(Q_OS_WIN) && defined(QGC_GST_STREAMING)
+                const QString package = QCoreApplication::applicationDirPath();
+                bool isolated = true;
+                for (const char* name : {"GST_PLUGIN_PATH", "GST_PLUGIN_PATH_1_0",
+                                         "GST_PLUGIN_SYSTEM_PATH", "GST_PLUGIN_SYSTEM_PATH_1_0"}) {
+                    isolated = isolated && qEnvironmentVariable(name) == package + "/gstreamer-plugins";
+                }
+                for (const char* name : {"GST_PLUGIN_SCANNER", "GST_PLUGIN_SCANNER_1_0"}) {
+                    isolated = isolated && qEnvironmentVariable(name) == package + "/gst-plugin-scanner.exe";
+                }
+                const QString registry = qEnvironmentVariable("GST_REGISTRY_1_0");
+                isolated = isolated && registry == qEnvironmentVariable("GST_REGISTRY")
+                    && registry.startsWith(QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+                                           + "/gstreamer-portable-v1/");
+                report.write(isolated ? "portable_video_environment=true\n" : "portable_video_environment=false\n");
+#endif
             }
         });
     }

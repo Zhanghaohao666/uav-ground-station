@@ -7,6 +7,7 @@ if (GST_FOUND)
     	gstqgcvideosinkbin.c
     	GStreamer.cc
     	GStreamer.h
+        PortableGStreamerEnvironment.h
     	GstVideoReceiver.cc
     	GstVideoReceiver.h
     )

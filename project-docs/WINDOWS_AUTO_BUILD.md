@@ -8,6 +8,8 @@
 
 [Windows 复现实验](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/38709949893) 使用原运行包 DLL，通过 TCP、UDP 各接收并解码 10 帧生成的测试画面；实际 EXE 的出图验证未通过，测试环境存在图形后端限制。该结果不能代替现场 Windows/MK22 的播放验收。
 
+2026-10-18：用户确认普通诊断入口能播放，退出后直接运行同目录 EXE 仍无视频，排除了同时运行和快捷方式指向其他目录的情况。候选源码 `v1.01.09-windows-startup-rc1` 将本包插件路径、扫描器及独立缓存配置内置到 Windows EXE。完整构建后请解压到新目录并直接运行 EXE；是否消除现场黑屏以用户实测为准，不能仅根据原生解码或启动检查判定。
+
 ## 点击运行和下载
 
 1. 登录 GitHub，打开 [Windows 可运行包](https://github.com/Zhanghaohao666/uav-ground-station/actions/workflows/windows-package.yml)。

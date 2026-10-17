@@ -20,6 +20,7 @@ foreach ($name in @('GST_PLUGIN_SCANNER', 'GST_PLUGIN_SCANNER_1_0')) {
 }
 $env:GST_REGISTRY = Join-Path $logDir 'gst-registry.bin'
 $env:GST_REGISTRY_1_0 = $env:GST_REGISTRY
+$env:QGC_GST_REGISTRY = $env:GST_REGISTRY
 $env:GST_DEBUG = '3'
 $env:GST_DEBUG_NO_COLOR = '1'
 $env:GST_DEBUG_FILE = Join-Path $logDir 'gstreamer.log'

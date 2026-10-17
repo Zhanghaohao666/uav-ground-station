@@ -145,6 +145,7 @@ VideoEnabled {
 
     HEADERS += \
         $$PWD/GStreamer.h \
+        $$PWD/PortableGStreamerEnvironment.h \
         $$PWD/GstVideoReceiver.h \
         $$PWD/VideoReceiver.h
 

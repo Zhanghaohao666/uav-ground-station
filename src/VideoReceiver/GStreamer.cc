@@ -16,6 +16,8 @@
 
 #include <QDebug>
 #include <QFile>
+#include <QStandardPaths>
+#include "PortableGStreamerEnvironment.h"
 
 #include "GStreamer.h"
 #include "GstVideoReceiver.h"
@@ -99,7 +101,7 @@ G_BEGIN_DECLS
     GST_PLUGIN_STATIC_DECLARE(qgc);
 G_END_DECLS
 
-#if (defined(Q_OS_MAC) && defined(QGC_INSTALL_RELEASE)) || defined(Q_OS_WIN)
+#if defined(Q_OS_MAC) && defined(QGC_INSTALL_RELEASE)
 static void qgcputenv(const QString& key, const QString& root, const QString& path)
 {
     QString value = root + path;
@@ -181,12 +183,13 @@ GStreamer::initialize(int argc, char* argv[], int debuglevel)
         qgcputenv("GST_PLUGIN_PATH",              currentDir, "/../Frameworks/GStreamer.framework/Versions/Current/lib/gstreamer-1.0");
     #endif
 #elif defined(Q_OS_WIN)
-    QString currentDir = QCoreApplication::applicationDirPath();
-    qgcputenv("GST_PLUGIN_PATH", currentDir, "/gstreamer-plugins");
-    // The Windows portable package includes its own plugin scanner.
-    if (QFile::exists(currentDir + "/gst-plugin-scanner.exe")) {
-        qgcputenv("GST_PLUGIN_SCANNER", currentDir, "/gst-plugin-scanner.exe");
-    }
+    const QString currentDir = QCoreApplication::applicationDirPath();
+    const QString registry = PortableGStreamerEnvironment::configure(
+        currentDir, QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    qCInfo(GStreamerLog) << "Portable GStreamer plugins:"
+                        << qEnvironmentVariable("GST_PLUGIN_PATH_1_0")
+                        << "scanner:" << qEnvironmentVariable("GST_PLUGIN_SCANNER_1_0")
+                        << "registry:" << registry;
 #endif
 
     //-- If gstreamer debugging is not configured via environment then use internal QT logging

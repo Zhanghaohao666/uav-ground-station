@@ -14,6 +14,13 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2
       - name: Check QML syntax
         run: qmllint xsrc/XUI/XUI.qml xsrc/XUI/XBoardRecordingDialog.qml xsrc/XUI/XPayloadControlPanel.qml
+      - name: Check production portable video environment isolation
+        run: |
+          mkdir -p /tmp/video-environment-build
+          cd /tmp/video-environment-build
+          qmake "$GITHUB_WORKSPACE/tests/video_environment/environment.pro"
+          make -j2
+          ./environment_tests
       - name: Compile real video lifecycle methods and preset JS with fake receivers
         working-directory: tests/video_demand
         run: |
