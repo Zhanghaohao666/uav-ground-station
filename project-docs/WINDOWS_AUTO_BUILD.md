@@ -10,6 +10,8 @@
 
 2026-10-18：用户确认普通诊断入口能播放，退出后直接运行同目录 EXE 仍无视频，排除了同时运行和快捷方式指向其他目录的情况。候选源码 `v1.01.09-windows-startup-rc2` 将本包插件路径、扫描器及独立缓存配置内置到 Windows EXE。完整构建后请解压到新目录并直接运行 EXE；是否消除现场黑屏以用户实测为准，不能仅根据原生解码或启动检查判定。用户补充原包在纯英文目录也不能播放，因此迁移目录不足以解决本次问题。
 
+[下载 2026-10-18 候选运行包](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.09-windows-startup-rc2/NexusGround-Windows-x64_v1.01.09-windows-startup-rc2_20261018.zip)，无需安装 Qt。此包对应编译提交 `3b4e023`，实际用户电脑直接启动 EXE 的播放仍待验收。该次 Windows 构建保存了原生解码结果，但 GUI 启动报告未出现在保存产物中；后续工作流已增加报告文件/内容及测试 XML 的硬性检查，缺失证据会失败。
+
 ## 点击运行和下载
 
 1. 登录 GitHub，打开 [Windows 可运行包](https://github.com/Zhanghaohao666/uav-ground-station/actions/workflows/windows-package.yml)。

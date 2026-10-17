@@ -14,8 +14,15 @@ foreach ($test in @('environment', 'probe')) {
         & jom -j2
         if ($LASTEXITCODE -ne 0) { throw "Video environment build failed: $test" }
         if ($test -eq 'environment') {
-            & "$testBuild\release\environment_tests.exe"
+            $resultsFile = Join-Path $build 'video-environment-results.xml'
+            & "$testBuild\release\environment_tests.exe" '-o' "$resultsFile,xml"
             if ($LASTEXITCODE -ne 0) { throw 'Video environment regression failed' }
+            if (-not (Test-Path $resultsFile -PathType Leaf)) { throw 'Video environment test did not produce results' }
+            [xml]$results = Get-Content $resultsFile -Raw -ErrorAction Stop
+            if ($results.SelectNodes('/TestCase/TestFunction').Count -lt 6 -or
+                $results.SelectNodes('/TestCase/TestFunction/Incident[@type="fail"]').Count -gt 0) {
+                throw 'Video environment test results are incomplete or contain failures'
+            }
         }
     } finally { Pop-Location }
 }

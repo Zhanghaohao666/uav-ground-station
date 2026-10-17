@@ -109,7 +109,11 @@ try {
     Start-Sleep -Seconds 30
     $process.Refresh()
     if ($process.HasExited) { throw "启动检查失败，程序提前退出：$($process.ExitCode)" }
-    $report = Get-Content $env:QGC_CI_STARTUP_REPORT -Raw -ErrorAction SilentlyContinue
+    if (-not (Test-Path $env:QGC_CI_STARTUP_REPORT -PathType Leaf)) {
+        throw 'Startup report is missing; a live process alone does not verify the GUI'
+    }
+    $report = [string](Get-Content $env:QGC_CI_STARTUP_REPORT -Raw -ErrorAction Stop)
+    if ([string]::IsNullOrWhiteSpace($report)) { throw 'Startup report is empty' }
     if ($report -notmatch 'root_window_created=true' -or $report -notmatch 'window_visible=true') {
         throw '启动检查失败：Qt 未创建可见的地面站主窗口，请查看启动日志'
     }

@@ -6,6 +6,8 @@
 
 发布标签用于区分实际源码快照；未修改程序内部原有版本号。这些标签是在 2026-09-30 整理导入，表中日期为原快照日期，不代表当日已发布 GitHub。新版支持在 GitHub 手动生成 Windows x64 运行包，详见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。只有成功的构建才提供完整运行包；现场视频、控制和录像仍需验收。
 
+**2026-10-18 启动环境候选包：** [下载 v1.01.09-windows-startup-rc2](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.09-windows-startup-rc2/NexusGround-Windows-x64_v1.01.09-windows-startup-rc2_20261018.zip)（约 179 MiB）。针对 normal 诊断入口可以播放、直接启动同目录 EXE 无视频的差异，内置本包视频插件路径、扫描器和独立缓存，并修正 Windows 中文路径环境变量编码。请完整解压到新目录，关闭其他地面站后直接运行 EXE，使用刚才诊断入口能播放的同一 RTSP 地址测试。编译及可核对的 TCP/UDP 原生解码通过，CI 未保存可核对的 GUI 启动报告，实际 GUI 出图及用户电脑上的恢复情况仍待验证；这是候选版。
+
 ## 版本导航
 
 | 标签 | 原快照日期 | 主要内容 |
