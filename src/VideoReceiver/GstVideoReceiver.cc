@@ -426,7 +426,7 @@ GstVideoReceiver::startDecoding(void* sink)
     _lastVideoFrameTime = 0;
     _resetVideoSink = true;
 
-    _videoSinkProbeId = gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_BUFFER, _videoSinkProbe, this, nullptr);
+    _videoSinkProbeId = gst_pad_add_probe(pad, static_cast<GstPadProbeType>(GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM), _videoSinkProbe, this, nullptr);
     gst_object_unref(pad);
     pad = nullptr;
 
@@ -1192,9 +1192,11 @@ GstVideoReceiver::_addVideoSink(GstPad* pad)
             gst_object_unref(sourcePad);
         }
     }
-    _dispatchSignal([this, width, height](){
-        emit videoSizeChanged(QSize(width, height));
-    });
+    if (width > 0 && height > 0) {
+        _dispatchSignal([this, width, height](){
+            emit videoSizeChanged(QSize(width, height));
+        });
+    }
 
     return true;
 }
@@ -1549,6 +1551,24 @@ GstVideoReceiver::_videoSinkProbe(GstPad* pad, GstPadProbeInfo* info, gpointer u
 
     if(user_data != nullptr) {
         GstVideoReceiver* pThis = static_cast<GstVideoReceiver*>(user_data);
+        if (GST_PAD_PROBE_INFO_TYPE(info) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
+            GstEvent* event = gst_pad_probe_info_get_event(info);
+            if (event != nullptr && GST_EVENT_TYPE(event) == GST_EVENT_CAPS) {
+                GstCaps* negotiated = nullptr;
+                gst_event_parse_caps(event, &negotiated); // borrowed from the event
+                if (negotiated != nullptr && !gst_caps_is_empty(negotiated) && !gst_caps_is_any(negotiated)) {
+                    const GstStructure* structure = gst_caps_get_structure(negotiated, 0);
+                    int width = 0, height = 0;
+                    if (gst_structure_get_int(structure, "width", &width) &&
+                        gst_structure_get_int(structure, "height", &height) && width > 0 && height > 0) {
+                        pThis->_dispatchSignal([pThis, width, height](){
+                            emit pThis->videoSizeChanged(QSize(width, height));
+                        });
+                    }
+                }
+            }
+            return GST_PAD_PROBE_OK;
+        }
 
         if (pThis->_resetVideoSink) {
             pThis->_resetVideoSink = false;
