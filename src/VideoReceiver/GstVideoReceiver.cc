@@ -1139,7 +1139,10 @@ GstVideoReceiver::_addDecoder(GstElement* src)
 bool
 GstVideoReceiver::_addVideoSink(GstPad* pad)
 {
-    GstCaps* caps = gst_pad_query_caps(pad, nullptr);
+    GstCaps* caps = gst_pad_get_current_caps(pad);
+    if (caps == nullptr) {
+        caps = gst_pad_query_caps(pad, nullptr);
+    }
 
     gst_object_ref(_videoSink); // gst_bin_add() will steal one reference
 
@@ -1172,6 +1175,22 @@ GstVideoReceiver::_addVideoSink(GstPad* pad)
     }
     if (caps != nullptr) {
         gst_caps_unref(caps);
+    }
+    // A decoder may expose its pad before raw CAPS have been negotiated. The
+    // parsed input caps already contain the coded dimensions in that case.
+    if ((width <= 0 || height <= 0) && _decoderValve != nullptr) {
+        GstPad* sourcePad = gst_element_get_static_pad(_decoderValve, "src");
+        if (sourcePad != nullptr) {
+            GstCaps* sourceCaps = gst_pad_get_current_caps(sourcePad);
+            if (sourceCaps == nullptr) sourceCaps = gst_pad_query_caps(sourcePad, nullptr);
+            if (sourceCaps != nullptr && !gst_caps_is_empty(sourceCaps) && !gst_caps_is_any(sourceCaps)) {
+                const GstStructure* structure = gst_caps_get_structure(sourceCaps, 0);
+                gst_structure_get_int(structure, "width", &width);
+                gst_structure_get_int(structure, "height", &height);
+            }
+            if (sourceCaps != nullptr) gst_caps_unref(sourceCaps);
+            gst_object_unref(sourcePad);
+        }
     }
     _dispatchSignal([this, width, height](){
         emit videoSizeChanged(QSize(width, height));
