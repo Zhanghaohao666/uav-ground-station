@@ -12,7 +12,9 @@
 - 解码后增加最多 2 帧、丢弃旧画面的显示队列，设置显示迟到上限及 QoS；不对压缩 H.264 帧任意丢弃。修复重连时查询尺寸涉及的 pad/caps 引用泄漏。
 - 保留启动环境候选修复、独立双控制和板端录像。新增实际生产 GstVideoReceiver 的 TCP/UDP 解码、网络配置及显示堵塞后保留新帧回归。
 
-验证记录随构建更新。现场无线容量、丢包和距离不由播放器配置保证；120ms 是接收缓冲目标，不是端到端时延。Windows 自动构建默认严格验证 GUI，候选包可显式允许无图形 runner 缺少 GUI 报告，但必须在 BUILD_INFO 中标记未验证，且原生解码测试不能省略。
+候选运行包已由 [Windows 构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39055314162) 生成，编译提交 `87d83f38fc99f49bdcf2615b0fbd3ed6863671c4`；[Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39055314010) 通过。Windows 实际接收器 6 项、环境隔离 6 项通过（各含初始化/清理）；随包 DLL 在中文目录下 TCP/UDP 各解码 10 帧。GUI 启动报告缺失、实际 GUI 视频未验收，BUILD_INFO 如实标记候选状态。
+
+现场无线容量、丢包和距离不由播放器配置保证；120ms 是接收缓冲目标，不是端到端时延。Windows 自动构建默认严格验证 GUI，候选包可显式允许无图形 runner 缺少 GUI 报告，但必须在 BUILD_INFO 中标记未验证，且原生解码测试不能省略。
 
 ## v1.01.09-windows-startup-rc2 — Windows 启动环境候选修复
 

@@ -8,7 +8,7 @@
 
 **2026-10-18 启动环境候选包：** [下载 v1.01.09-windows-startup-rc2](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.09-windows-startup-rc2/NexusGround-Windows-x64_v1.01.09-windows-startup-rc2_20261018.zip)（约 179 MiB）。针对 normal 诊断入口可以播放、直接启动同目录 EXE 无视频的差异，内置本包视频插件路径、扫描器和独立缓存，并修正 Windows 中文路径环境变量编码。请完整解压到新目录，关闭其他地面站后直接运行 EXE，使用刚才诊断入口能播放的同一 RTSP 地址测试。编译及可核对的 TCP/UDP 原生解码通过，CI 未保存可核对的 GUI 启动报告，实际 GUI 出图及用户电脑上的恢复情况仍待验证；这是候选版。
 
-**2026-10-18 流畅度候选源码 v1.01.10-mk22-rc1：** MK22 两套方案、按需切换载荷、120ms 网络抗抖动缓冲、解码后最多两帧显示队列。运行包及验证记录见对应 Release；现场远距离效果仍需实测。
+**最新候选运行包：[下载 v1.01.10-mk22-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.10-mk22-rc1/NexusGround-Windows-x64_v1.01.10-mk22-rc1_20261018.zip)**（约 179 MiB）。MK22 两套方案、按需切换载荷、120ms 网络抗抖动缓冲、解码后最多两帧显示队列。完整解压到新目录，关闭旧程序后运行 EXE。Windows 完整构建、实际接收器 TCP/UDP 解码、显示队列及环境隔离测试通过；无图形 runner 缺少 GUI 启动报告，已在 BUILD_INFO 标记未验证。用户电脑实际 GUI 出图和远距离效果仍需现场验证。
 
 ## 版本导航
 
