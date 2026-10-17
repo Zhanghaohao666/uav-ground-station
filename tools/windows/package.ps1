@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path $env:GITHUB_WORKSPACE).Path
 $build = Join-Path $env:RUNNER_TEMP 'gcs-build'
-$package = Join-Path $env:RUNNER_TEMP 'gcs-package\NexusGround'
+$package = Join-Path $env:RUNNER_TEMP 'gcs-package\地面站 NexusGround'
 New-Item -ItemType Directory -Force -Path $package | Out-Null
 Copy-Item "$build\staging\*" $package -Recurse -Force
 Get-ChildItem $package -Filter '*.pdb' -Recurse | Remove-Item -Force
@@ -125,5 +125,10 @@ $logs = (Get-Content "$build\startup-stdout.log", "$build\startup-stderr.log" -R
 if ($logs -match 'QQmlApplicationEngine failed to load component|module "[^"]+" is not installed|Failed to create OpenGL context|unable to find qmlglsink') {
     throw '启动检查发现缺失 QML 模块或渲染初始化失败，请查看日志'
 }
+# Exercise real native decoding and EXE startup in a Chinese package path,
+# then give the downloadable archive its normal top-level directory.
+$finalPackage = Join-Path (Split-Path $package -Parent) 'NexusGround'
+Move-Item -LiteralPath $package -Destination $finalPackage
+$package = $finalPackage
 "Windows 运行包已生成：$package" | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 "源码版本：$($info.source_version)，提交：$($info.source_commit)" | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
