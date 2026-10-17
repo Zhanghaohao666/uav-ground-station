@@ -69,7 +69,11 @@ private slots:
         algorithm.socket->write(feedback.left(3));algorithm.socket->flush();QTest::qWait(10);algorithm.socket->write(feedback.mid(3));
         QTRY_COMPARE(a.targetCount(),1);QTRY_COMPARE(g.trackerStatus(),3);QCOMPARE(a.trackerStatus(),2);
         QCOMPARE(a.targets().first().toMap()["id"].toInt(),42);QVERIFY(g.targets().isEmpty());
-        a.trackId(42);QTRY_VERIFY(a.logText().contains("42"));QVERIFY(!g.logText().contains("42"));
+        // Match the command text, not digits that also occur in timestamps.
+        a.trackId(42);
+        const QString command = QStringLiteral("Track target ID 42");
+        QTRY_VERIFY(a.logText().contains(command));QVERIFY(!g.logText().contains(command));
+        QCOMPARE(cloud.received.size(),0);
         a.disConnectQml();QTRY_VERIFY(!a.isConnected());QVERIFY(a.targets().isEmpty());QCOMPARE(g.trackerStatus(),3);
     }
     void actualAlgorithmAndGimbalPanelsUseDistinctControllers() {

@@ -49,7 +49,7 @@ private slots:
     }
 
     void unicodeSetterSurvivesWindowsCodePageConversion() {
-        const QString value = QString::fromUtf8("C:/Users/陶文兵/地面站/缓存");
+        const QString value = QString::fromUtf8("C:/Users/测试用户/地面站/缓存");
         qputenv("QGC_TEST_VIDEO_PATH", value.toUtf8());
         qInfo() << "Legacy UTF-8/narrow setter preserved Unicode:"
                 << (qEnvironmentVariable("QGC_TEST_VIDEO_PATH") == value);
