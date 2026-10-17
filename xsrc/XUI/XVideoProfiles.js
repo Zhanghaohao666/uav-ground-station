@@ -5,15 +5,8 @@ function repairShared(facts) {
     for (var i = 0; i < 2; ++i) {
         var current = String(facts[i].rawValue || "").trim();
         var match = /^(rtsp:\/\/(?:192\.168\.2\.36|192\.168\.1\.104):8554)\/(board|rgb|algorithm|preview|infrared)\/?$/.exec(current);
-        var expected = i === 0 ? "board" : "rgb";
         if (!current) facts[i].rawValue = sharedDefaults[i];
-        else if (match && match[2] !== expected) facts[i].rawValue = match[1] + "/" + expected;
-    }
-}
-
-function resetShared(facts) {
-    for (var i = 0; i < 2; ++i) {
-        if (facts[i].rawValue !== sharedDefaults[i]) facts[i].rawValue = sharedDefaults[i];
+        else if (match && current !== sharedDefaults[i]) facts[i].rawValue = sharedDefaults[i];
     }
 }
 
@@ -43,12 +36,18 @@ function apply(mode, manager, facts, updateLayout) {
     var selected = profile(mode);
     if (!selected) return false;
     repairShared(facts);
+    // Preserve the user's payload subscriptions. Switching a preset must not
+    // silently pull every camera over MK22; open its main view if none is open.
+    var payloadMask = Number(manager.requestedStreamMask) & (((1 << selected.count) - 1) & ~3);
+    if (!payloadMask) payloadMask = 1 << 2;
     // Stop all old payload receivers before touching any URL. VideoManager's
     // asynchronous stop completion restarts only the latest requested URI.
     for (var i = 2; i < 6; ++i) manager.stopVideoStream(i);
     for (var j = 2; j < 6; ++j) facts[j].rawValue = selected.urls[j - 2];
     updateLayout(mode);
-    for (var k = 2; k < selected.count; ++k) manager.startVideoStream(k);
+    for (var k = 2; k < selected.count; ++k) {
+        if (payloadMask & (1 << k)) manager.startVideoStream(k);
+    }
     return true;
 }
 

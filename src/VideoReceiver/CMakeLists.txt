@@ -8,6 +8,7 @@ if (GST_FOUND)
     	GStreamer.cc
     	GStreamer.h
         PortableGStreamerEnvironment.h
+        VideoPlaybackPolicy.h
     	GstVideoReceiver.cc
     	GstVideoReceiver.h
     )

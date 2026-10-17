@@ -17,6 +17,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 #include <qglobal.h>
+#include "VideoPlaybackPolicy.h"
 
 GST_DEBUG_CATEGORY_STATIC(gst_qgc_video_sink_bin_debug);
 #define GST_CAT_DEFAULT gst_qgc_video_sink_bin_debug
@@ -121,9 +122,15 @@ _vsb_init(GTypeInstance *instanceData, void *vsbVoid)
 
     gboolean initialized        = FALSE;
     GstElement* glcolorconvert  = NULL;
+    GstElement* decodedQueue    = NULL;
     GstPad* pad                 = NULL;
 
     do {
+        if ((decodedQueue = gst_element_factory_make("queue", "latest-decoded-frames")) == NULL) {
+            GST_ERROR_OBJECT(vsb, "Could not create decoded-frame display queue");
+            break;
+        }
+        uav_configure_decoded_queue(decodedQueue);
         if ((vsb->glupload = gst_element_factory_make("glupload", NULL)) == NULL) {
             GST_ERROR_OBJECT(vsb, "gst_element_factory_make('glupload') failed");
             break;
@@ -139,17 +146,19 @@ _vsb_init(GTypeInstance *instanceData, void *vsbVoid)
             break;
         }
 
-        if ((pad = gst_element_get_static_pad(vsb->glupload, "sink")) == NULL) {
+        if ((pad = gst_element_get_static_pad(decodedQueue, "sink")) == NULL) {
             GST_ERROR_OBJECT(vsb, "gst_element_get_static_pad(glupload, 'sink') failed");
             break;
         }
 
+        uav_configure_display_sink(vsb->qmlglsink);
         gst_object_ref(vsb->glupload);
         gst_object_ref(vsb->qmlglsink);
 
-        gst_bin_add_many(GST_BIN(vsb), vsb->glupload, glcolorconvert, vsb->qmlglsink, NULL);
+        gst_bin_add_many(GST_BIN(vsb), decodedQueue, vsb->glupload, glcolorconvert, vsb->qmlglsink, NULL);
 
-        gboolean ret = gst_element_link_many(vsb->glupload, glcolorconvert, vsb->qmlglsink, NULL);
+        gboolean ret = gst_element_link_many(decodedQueue, vsb->glupload, glcolorconvert, vsb->qmlglsink, NULL);
+        decodedQueue = NULL; // the bin owns it from this point
 
         glcolorconvert = NULL;
 
@@ -178,6 +187,10 @@ _vsb_init(GTypeInstance *instanceData, void *vsbVoid)
     if (pad != NULL) {
         gst_object_unref(pad);
         pad = NULL;
+    }
+
+    if (decodedQueue != NULL) {
+        gst_object_unref(decodedQueue);
     }
 
     if (glcolorconvert != NULL) {

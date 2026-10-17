@@ -2,6 +2,11 @@ name: Windows 可运行包
 
 on:
   workflow_dispatch:
+    inputs:
+      allow_unverified_gui:
+        description: 'Candidate only: permit missing GUI report on a headless runner; record it as unverified'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -47,7 +52,9 @@ jobs:
         run: ./tools/windows/build.ps1
 
       - name: 打包及启动检查
-        run: ./tools/windows/package.ps1
+        run: |
+          $allowGuiPending = '${{ inputs.allow_unverified_gui }}' -eq 'true'
+          ./tools/windows/package.ps1 -AllowUnverifiedGui:$allowGuiPending
 
       - name: 上传完整 Windows 运行包
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

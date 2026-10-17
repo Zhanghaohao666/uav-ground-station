@@ -1,3 +1,4 @@
+param([switch]$AllowUnverifiedGui)
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path $env:GITHUB_WORKSPACE).Path
 $build = Join-Path $env:RUNNER_TEMP 'gcs-build'
@@ -85,7 +86,9 @@ Copy-Item -Path @("$source\tools\windows\Video-Diagnostics.cmd", "$source\tools\
 MK22 默认主控 192.168.2.36；Wi-Fi 调试使用 192.168.1.104。
 版本和源码提交见 BUILD_INFO.json，功能说明见“使用说明”。
 Windows EXE 已内置本包视频插件路径及独立缓存，无需诊断脚本设置环境。
-本包是启动环境候选修复，需在你的电脑上直接双击 EXE 验证视频。
+本包为 MK22 流畅度候选版：120ms 网络缓冲、解码后最多两帧队列。
+切方案保留手动开启的通道；没有开启载荷时只开主画面。
+请在你的电脑上直接双击 EXE 验证视频，随后进行远距离实测。
 若仍无画面，运行随包 Video-Diagnostics.cmd 并保留 video-diagnostics 日志。
 此构建仍需现场验证 Windows 视频播放、载荷控制和板端录像。
 '@ | Set-Content "$package\请先阅读.txt" -Encoding utf8
@@ -105,6 +108,8 @@ $env:LOCALAPPDATA = Join-Path $build 'smoke-localappdata'
 New-Item -ItemType Directory -Force $env:APPDATA, $env:LOCALAPPDATA | Out-Null
 $process = Start-Process $exe -WorkingDirectory $package -ArgumentList '--log-output' `
     -RedirectStandardOutput "$build\startup-stdout.log" -RedirectStandardError "$build\startup-stderr.log" -PassThru
+$guiStartupVerified = $false
+$guiStartupFailure = $null
 try {
     Start-Sleep -Seconds 30
     $process.Refresh()
@@ -120,11 +125,23 @@ try {
     if ($report -notmatch 'portable_video_environment=true') {
         throw 'Direct EXE startup did not isolate its video environment'
     }
+    $guiStartupVerified = $true
+} catch {
+    $guiStartupFailure = $_.Exception.Message
+    if (-not $AllowUnverifiedGui) { throw }
+    Write-Warning "GUI startup remains unverified on this runner: $guiStartupFailure"
 } finally {
     if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
     Get-ChildItem (Join-Path $env:USERPROFILE 'Documents') -Filter 'QGCConsole.log' -Recurse -ErrorAction SilentlyContinue |
         Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName "$build\startup-console.log" -Force }
 }
+$info.gui_startup_verified = $guiStartupVerified
+$info.gui_startup_failure = $guiStartupFailure
+$info.gui_video_frames_verified = $false
+$info.allow_unverified_gui_candidate = [bool]$AllowUnverifiedGui
+$info.rtsp_network_jitter_ms = 120
+$info.decoded_display_queue_max_frames = 2
+$info | ConvertTo-Json | Set-Content "$package\BUILD_INFO.json" -Encoding utf8
 $logs = (Get-Content "$build\startup-stdout.log", "$build\startup-stderr.log" -Raw -ErrorAction SilentlyContinue) -join "`n"
 if ($logs -match 'QQmlApplicationEngine failed to load component|module "[^"]+" is not installed|Failed to create OpenGL context|unable to find qmlglsink') {
     throw '启动检查发现缺失 QML 模块或渲染初始化失败，请查看日志'

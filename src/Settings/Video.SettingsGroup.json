@@ -160,7 +160,7 @@
 {
     "name":             "lowLatencyMode",
     "shortDesc": "Tweaks video for lower latency",
-    "longDesc":  "If this option is enabled, the rtpjitterbuffer is removed and the video sink is set to assynchronous mode, reducing the latency by about 200 ms.",
+    "longDesc":  "Reduce display waiting. RTSP retains a short network jitter buffer for radio links; the extra buffer is bypassed only for raw UDP input.",
     "type":             "bool",
     "default":     false
 },

@@ -37,6 +37,7 @@ public:
 };
 class VideoManager : public QObject {
  Q_OBJECT
+ Q_PROPERTY(int requestedStreamMask READ requestedStreamMask NOTIFY requestedStreamMaskChanged)
 public:
  #include "stream_count.inc"
  VideoSettings settings; VideoSettings* _videoSettings=&settings;
@@ -135,13 +136,13 @@ private slots:
   for(int i=2;i<6;++i)m.receivers[i].finishStop();
   QCOMPARE(m.receivers[2].lastUri,QString("rtsp://192.168.2.36:8554/algorithm"));
   QCOMPARE(m.receivers[3].lastUri,QString("rtsp://192.168.2.36:8554/preview"));
-  QCOMPARE(m.receivers[4].lastUri,QString("rtsp://192.168.2.36:8554/infrared"));
-  QCOMPARE(m.receivers[5].starts,1);QCOMPARE(m.requestedStreamMask(),31);
+  QVERIFY(!m._videoEnabled[4]);
+  QCOMPARE(m.receivers[5].starts,1);QCOMPARE(m.requestedStreamMask(),15);
   for(int i=0;i<2;++i)QCOMPARE(m.receivers[i].stops,0);
  }
  void switchingPreservesClosedSharedCameras() {
   VideoManager m;m.stopVideoStream(0);m.showAll();QVERIFY(applyPreset(m,"algorithm"));
-  QCOMPARE(m.requestedStreamMask(),28);
+  QCOMPARE(m.requestedStreamMask(),4);
   for(int i=0;i<2;++i){QCOMPARE(m.receivers[i].starts,0);QCOMPARE(m.receivers[i].stops,0);}
  }
  void invalidPresetDoesNotChangeAnyStream() {
@@ -153,7 +154,7 @@ private slots:
   m.setVideoStreamVisible(0,true);m.receivers[0].finishStart();
   QVERIFY(applyPreset(m,"algorithm"));
   QCOMPARE(m.configuredUri[1],QString("rtsp://192.168.2.36:8554/rgb"));
-  QCOMPARE(m.receivers[1].starts,0);QCOMPARE(m.receivers[0].stops,0);QCOMPARE(m.requestedStreamMask(),29);
+  QCOMPARE(m.receivers[1].starts,0);QCOMPARE(m.receivers[0].stops,0);QCOMPARE(m.requestedStreamMask(),5);
  }
  void repairsOnlyBadSharedCameraKeepsCorrectCameraAndSelection() {
   VideoManager m;m.configuredUri[0]="rtsp://192.168.2.36:8554/board";m.configuredUri[1]="rtsp://192.168.2.36:8554/preview";
@@ -162,14 +163,14 @@ private slots:
   m.receivers[1].finishStop();QCOMPARE(m.receivers[1].lastUri,QString("rtsp://192.168.2.36:8554/rgb"));
   QCOMPARE(m.requestedStreamMask(),15);
  }
- void wifiAddressIsPreservedAndEmptySharedGetsDefaults() {
+ void knownDebugSharedAddressMigratesToMk22AndEmptySharedGetsDefaults() {
   VideoManager m;m.configuredUri[0]="";m.configuredUri[1]="rtsp://192.168.1.104:8554/algorithm";
   QVERIFY(applyPreset(m,"algorithm"));
   QCOMPARE(m.configuredUri[0],QString("rtsp://192.168.2.36:8554/board"));
-  QCOMPARE(m.configuredUri[1],QString("rtsp://192.168.1.104:8554/rgb"));
+  QCOMPARE(m.configuredUri[1],QString("rtsp://192.168.2.36:8554/rgb"));
   QCOMPARE(m.receivers[1].starts,0);
  }
- void actualSettingsDefaultsAndExplicitRestoreAreDistinct() {
+ void actualSettingsDefaultsUseMk22AndCustomAddressesRemainSupported() {
   QFile metadata("../../src/Settings/Video.SettingsGroup.json");QVERIFY(metadata.open(QIODevice::ReadOnly));
   auto facts=QJsonDocument::fromJson(metadata.readAll()).object()["QGC.MetaData.Facts"].toArray();
   QMap<QString,QString> defaults;for(auto fact:facts)defaults[fact.toObject()["name"].toString()]=fact.toObject()["default"].toString();
@@ -177,7 +178,6 @@ private slots:
   QJSEngine js;QFile file("../../xsrc/XUI/XVideoProfiles.js");QVERIFY(file.open(QIODevice::ReadOnly));QVERIFY(!js.evaluate(QString::fromUtf8(file.readAll())).isError());
   auto value=js.evaluate("var f=[{rawValue:'rtsp://custom.test/down'},{rawValue:'rtsp://custom.test/other'}]; repairShared(f); f[1].rawValue");
   QCOMPARE(value.toString(),QString("rtsp://custom.test/other"));
-  QCOMPARE(js.evaluate("resetShared(f); f[1].rawValue").toString(),defaults["rtspUrl2"]);
  }
  void onlyAlgorithmInputsRouteTrackingToIndependentControllers() {
   QJSEngine js;QFile file("../../xsrc/XUI/XVideoProfiles.js");QVERIFY(file.open(QIODevice::ReadOnly));QVERIFY(!js.evaluate(QString::fromUtf8(file.readAll())).isError());

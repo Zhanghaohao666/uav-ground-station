@@ -15,6 +15,7 @@
  */
 
 #include "GstVideoReceiver.h"
+#include "VideoPlaybackPolicy.h"
 
 #include <QDebug>
 #include <QUrl>
@@ -779,7 +780,8 @@ GstVideoReceiver::_makeSource(const QString& uri)
             }
         } else if (isRtsp) {
             if ((source = gst_element_factory_make("rtspsrc", "source")) != nullptr) {
-                g_object_set(static_cast<gpointer>(source), "location", qPrintable(uri), "latency", 17, "udp-reconnect", 1, "timeout", _udpReconnect_us, NULL);
+                uav_configure_rtsp_source(source);
+                g_object_set(source, "location", uri.toUtf8().constData(), "udp-reconnect", TRUE, "timeout", _udpReconnect_us, NULL);
             }
         } else if(isUdp264 || isUdp265 || isUdpMPEGTS || isTaisync) {
             if ((source = gst_element_factory_make("udpsrc", "source")) != nullptr) {
@@ -1159,28 +1161,21 @@ GstVideoReceiver::_addVideoSink(GstPad* pad)
 
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(_pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline-with-videosink");
 
-    if (_decoderValve != nullptr) {
-        // Extracing video size from source is more guaranteed
-        GstPad* valveSrcPad = gst_element_get_static_pad(_decoderValve, "src");
-        GstCaps* valveSrcPadCaps = gst_pad_query_caps(valveSrcPad, nullptr);
-        GstStructure* s = gst_caps_get_structure(valveSrcPadCaps, 0);
-
-        if (s != nullptr) {
-            gint width, height;
-            gst_structure_get_int(s, "width", &width);
-            gst_structure_get_int(s, "height", &height);
-            _dispatchSignal([this, width, height](){
-                emit videoSizeChanged(QSize(width, height));
-            });
-        }
-
-        gst_caps_unref(caps);
-        caps = nullptr;
-    } else {
-        _dispatchSignal([this](){
-            emit videoSizeChanged(QSize(0, 0));
-        });
+    // Decoded caps describe the actual displayed size. Do not retain queried
+    // pads/caps across reconnects or dereference an absent encoded caps structure.
+    int width = 0;
+    int height = 0;
+    if (caps != nullptr && !gst_caps_is_empty(caps) && !gst_caps_is_any(caps)) {
+        const GstStructure* structure = gst_caps_get_structure(caps, 0);
+        gst_structure_get_int(structure, "width", &width);
+        gst_structure_get_int(structure, "height", &height);
     }
+    if (caps != nullptr) {
+        gst_caps_unref(caps);
+    }
+    _dispatchSignal([this, width, height](){
+        emit videoSizeChanged(QSize(width, height));
+    });
 
     return true;
 }

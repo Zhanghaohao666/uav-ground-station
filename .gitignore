@@ -110,3 +110,7 @@ tests/payload_controls/Makefile*
 tests/payload_controls/payload_tests
 tests/payload_controls/payload_live_feedback
 tests/payload_controls/target_wrapper.sh
+
+tests/video_receiver_native/Makefile*
+tests/video_receiver_native/receiver_tests
+tests/video_receiver_native/target_wrapper.sh

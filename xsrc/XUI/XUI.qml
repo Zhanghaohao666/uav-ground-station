@@ -362,10 +362,6 @@ Item {
                         onClicked: root.applyVideoProfile(modelData.mode)
                     }
                 }
-                XButtonLabel {
-                    text: qsTr("下视/D455默认")
-                    onClicked: VideoProfiles.resetShared(root._videoRtspFacts)
-                }
                 XLabel {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: videoProfileBar.width > 1050

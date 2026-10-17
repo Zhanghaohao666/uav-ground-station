@@ -27,6 +27,35 @@ foreach ($test in @('environment', 'probe')) {
     } finally { Pop-Location }
 }
 
+$receiverBuild = Join-Path $build 'video-receiver'
+New-Item -ItemType Directory -Force $receiverBuild | Out-Null
+Push-Location $receiverBuild
+$fixture = $null
+try {
+    & qmake "$source\tests\video_receiver_native\receiver.pro" 'CONFIG+=release'
+    if ($LASTEXITCODE -ne 0) { throw 'Native receiver qmake failed' }
+    & jom -j2
+    if ($LASTEXITCODE -ne 0) { throw 'Native receiver build failed' }
+    $fixture = Start-Process python -ArgumentList @('-u', "$source/tests/video_transport/rtsp_fixture.py") -PassThru `
+        -RedirectStandardOutput "$build/receiver-fixture.log" -RedirectStandardError "$build/receiver-fixture-error.log"
+    Start-Sleep 2
+    if ($fixture.HasExited) { throw 'Receiver RTSP fixture failed' }
+    $env:UAV_TEST_RTSP_URL = 'rtsp://127.0.0.1:18554/test'
+    $receiverResults = Join-Path $build 'video-receiver-results.xml'
+    & "$receiverBuild\release\receiver_tests.exe" '-o' "$receiverResults,xml"
+    if ($LASTEXITCODE -ne 0) { throw 'Actual receiver or decoded-queue regression failed' }
+    if (-not (Test-Path $receiverResults -PathType Leaf)) { throw 'Receiver test results missing' }
+    [xml]$nativeResults = Get-Content $receiverResults -Raw -ErrorAction Stop
+    if ($nativeResults.SelectNodes('/TestCase/TestFunction').Count -lt 5 -or
+        $nativeResults.SelectNodes('/TestCase/TestFunction/Incident[@type="fail"]').Count -gt 0) {
+        throw 'Actual receiver test results incomplete or failed'
+    }
+} finally {
+    Remove-Item Env:UAV_TEST_RTSP_URL -ErrorAction SilentlyContinue
+    if ($fixture -and -not $fixture.HasExited) { Stop-Process -Id $fixture.Id -Force }
+    Pop-Location
+}
+
 Push-Location $build
 try {
     # Keep the full source tag in APP_VERSION_STR. Windows file VERSION must
