@@ -69,9 +69,6 @@ public:
     /// @brief Returns true if unit tests are being run
     bool runningUnitTests(void) const{ return _runningUnitTests; }
     bool activationCancelled() const { return _activationCancelled; }
-private:
-    bool _activationCancelled = false;
-public:
 
     /// @brief Returns true if Qt debug output should be logged to a file
     bool logOutput(void) const{ return _logOutput; }
@@ -210,6 +207,7 @@ private:
     int                 _minorVersion           = 0;
     int                 _buildVersion           = 0;
     GPSRTKFactGroup*    _gpsRtkFactGroup        = nullptr;
+    bool               _activationCancelled  = false;
     QGCToolbox*         _toolbox                = nullptr;
     QQuickWindow*       _mainRootWindow         = nullptr;
     bool                _bluetoothAvailable     = false;

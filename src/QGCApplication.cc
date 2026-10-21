@@ -291,7 +291,6 @@ QGCApplication::QGCApplication(int &argc, char* argv[], bool unitTesting)
         return;
     }
 
-    this->setApplicationVersion(QString(APP_VERSION_STR));
 
     // Set settings format
     QSettings::setDefaultFormat(QSettings::IniFormat);
