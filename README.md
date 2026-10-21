@@ -1,24 +1,27 @@
 # 无人机地面站
 
-新增离线授权功能：**v1.01.12-offline-license-rc2**，基于自适应视频候选版。
-首次运行导出 `.ngreq` 授权申请，由管理员签发 `.nglic` 后导入；可离线使用，支持永久/限期及电脑绑定。
-客户运行包不含私钥，签发工具单独提供，详见 [离线授权操作说明](project-docs/OFFLINE_LICENSING.md)。
-Windows 新运行包以对应 Release/成功 CI 为准；旧版公开下载不会自动失效。
+当前 Windows 候选运行包：**v1.01.12-offline-license-rc2 — 离线机器码授权＋按需高低清视频**。
 
-当前发布：**v1.01.09-windows — Windows x64 可运行包**。功能基于 v1.01.09-dual-control（独立算法板控制与公共视频地址修复），原工程为用户提供的 `v1.01.09_fix_gimbal_tcp` Qt/QGroundControl 工程。
+**[下载 Windows x64 完整运行包，约 179 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.12-offline-license-rc2/NexusGround-Windows-x64_v1.01.12-offline-license-rc2_20261022.zip)**。
+完整解压到新目录，关闭旧地面站后运行 `NexusGround.exe`，保留全部 DLL/QML/视频插件，无需安装 Qt、GStreamer 或 Python。
 
-**直接运行请下载 [Windows 完整 ZIP](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.09-windows/NexusGround-Windows-x64_v1.01.09-windows_20261012.zip)**，完整解压后运行 `NexusGround.exe`，保留所有 DLL/QML/视频插件。无需安装 Qt、GStreamer 或编译器。原版可以保留；启动新版前关闭旧程序。
+首次运行会要求激活：导出 `.ngreq` 申请给管理员，收到签发的 `.nglic` 后导入即可离线使用，支持永久/限期和电脑绑定。
+以后升级程序目录、切换方案或清理软件设置不主动删除授权。运行 `License-Information.cmd` 可查看授权或续期，详见 [离线授权说明](project-docs/OFFLINE_LICENSING.md)。
+客户 ZIP 不含签发私钥或管理员工具；私钥由拥有者在本地单独保管，不进入 GitHub/CI。旧版公开程序不会自动失效，公开源码可被修改后重新构建。
 
-发布标签用于区分实际源码快照；未修改程序内部原有版本号。这些标签是在 2026-09-30 整理导入，表中日期为原快照日期，不代表当日已发布 GitHub。新版支持在 GitHub 手动生成 Windows x64 运行包，详见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。只有成功的构建才提供完整运行包；现场视频、控制和录像仍需验收。
+基于 v1.01.11-adaptive-rc1，保留 MK22 云台/算法板两套方案、单路高清/多路按需低码率、独立双控制和板端高清录像。
+需配套 [v1.4.0 板端程序](https://github.com/Zhanghaohao666/uav-board-deploy/blob/v1.4.0/docs/adaptive-streams.md)，此次授权修改不要求重新部署板端。
 
-**2026-10-18 启动环境候选包：** [下载 v1.01.09-windows-startup-rc2](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.09-windows-startup-rc2/NexusGround-Windows-x64_v1.01.09-windows-startup-rc2_20261018.zip)（约 179 MiB）。针对 normal 诊断入口可以播放、直接启动同目录 EXE 无视频的差异，内置本包视频插件路径、扫描器和独立缓存，并修正 Windows 中文路径环境变量编码。请完整解压到新目录，关闭其他地面站后直接运行 EXE，使用刚才诊断入口能播放的同一 RTSP 地址测试。编译及可核对的 TCP/UDP 原生解码通过，CI 未保存可核对的 GUI 启动报告，实际 GUI 出图及用户电脑上的恢复情况仍待验证；这是候选版。
-
-**最新候选运行包：[下载 v1.01.11-adaptive-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.11-adaptive-rc1/NexusGround-Windows-x64_v1.01.11-adaptive-rc1_20261021.zip)**（约 179 MiB）。单路高清、多路低码率，保留云台/算法板两套方案、按需订阅、120ms 网络缓冲与板端高清录像。需要配套 [v1.4.0 板端程序](https://github.com/Zhanghaohao666/uav-board-deploy/blob/v1.4.0/docs/adaptive-streams.md)，当前 104 和载荷板已部署。完整解压到新目录，关闭旧程序后运行 EXE。Windows 完整构建、TCP/UDP 原生解码及环境隔离通过；无图形 runner 的 GUI 未验收，用户电脑实际播放和室外无线效果仍需验证。
+Windows 完整编译、CNG 授权测试、生产 EXE 未授权激活窗口、原生 TCP/UDP 解码及视频环境隔离通过；Linux 视频/控制/录像回归通过。
+**真实用户电脑的授权后主界面、视频播放和室外无线效果仍需验收**，不能把原生解码当作 GUI 播放验收。
+包内 `BUILD_INFO.json` 记录实际提交和验证范围；操作及自动编译见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。
 
 ## 版本导航
 
-| 标签 | 原快照日期 | 主要内容 |
+| 标签 | 日期 | 主要内容 |
 |---|---|---|
+| [v1.01.12-offline-license-rc2](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.12-offline-license-rc2) | 2026-10-22 | 离线机器码授权及独立签发工具 |
+| [v1.01.11-adaptive-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.11-adaptive-rc1) | 2026-10-21 | 单路高清、多路按需低码率 |
 | [v1.01.09-base](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-base) | 2026-09-28 | 原始五路地面站 |
 | [v1.01.09-mk22-ir](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-mk22-ir) | 2026-09-29 | 算法板红外默认地址 |
 | [v1.01.09-on-demand](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-on-demand) | 2026-09-29 | 五路按需拉流 |
