@@ -11,6 +11,8 @@
 - 高低清切换沿用异步停止/启动状态机，关闭或隐藏的视频不会被重连逻辑重新打开。预览缩小后仍使用原始 1920×1080 跟踪坐标，检测跟踪控制与板端高清录像保持原地址。
 - 本地生产生命周期与配置脚本回归 35 项通过（含初始化/清理）；QML 语法检查通过。Windows 完整构建、现场 GUI 播放与无线距离测试另行记录，不能据此宣称已验收。
 
+运行包已发布：[v1.01.11-adaptive-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.11-adaptive-rc1)，编译提交 `73a5f476974ae91bd7f7c6437bd283051222b65d`。[Windows 完整构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39568614563) 和 [Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39568614391) 均通过；随包中文目录 TCP/UDP 各解码 10 帧。GUI 启动报告未通过，仍如实标记候选状态；未把板端六路低清实际解码结果当作 Windows GUI 或 MK22 室外验收。
+
 ## v1.01.10-mk22-rc1 — MK22 视频流畅度候选版
 
 修改日期：2026-10-18。
