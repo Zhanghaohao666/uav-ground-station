@@ -48,6 +48,9 @@ jobs:
       - name: 准备视频库和构建工具
         run: ./tools/windows/setup-dependencies.ps1
 
+      - name: 离线授权 Windows 原生校验及界面测试
+        run: ./tools/windows/test-licensing.ps1
+
       - name: 编译新版地面站
         run: ./tools/windows/build.ps1
 
@@ -61,6 +64,17 @@ jobs:
         with:
           name: NexusGround-Windows-x64
           path: ${{ runner.temp }}/gcs-package/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: 编译独立管理员签发工具（不含私钥）
+        run: ./tools/windows/build-license-authority.ps1
+
+      - name: 上传管理员工具（不含私钥）
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: NexusLicenseAuthority-Windows-x64-NO-PRIVATE-KEY
+          path: ${{ runner.temp }}/license-authority/
           if-no-files-found: error
           retention-days: 30
 

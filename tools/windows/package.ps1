@@ -72,15 +72,21 @@ $info = [ordered]@{
     native_h264_tcp_udp_decoded_frames_each = 10
     customer_pc_direct_exe_playback_verified = $false
     board_and_mk22_live_tested = $false
+    offline_license_required = $true
+    offline_license_algorithm = 'RSA-3072-PSS-SHA256'
+    activation_gate_startup_verified = $false
 }
 $info | ConvertTo-Json | Set-Content "$package\BUILD_INFO.json" -Encoding utf8
 Copy-Item -Path @("$source\COPYING.md", "$source\CHANGELOG.md") -Destination $package
 Copy-Item "$source\project-docs" "$package\使用说明" -Recurse
-Copy-Item -Path @("$source\tools\windows\Video-Diagnostics.cmd", "$source\tools\windows\Video-Compatible.cmd", "$source\tools\windows\video-diagnostics.ps1") -Destination $package
+Copy-Item -Path @("$source\tools\windows\License-Information.cmd", "$source\tools\windows\Video-Diagnostics.cmd", "$source\tools\windows\Video-Compatible.cmd", "$source\tools\windows\video-diagnostics.ps1") -Destination $package
 @'
 新版地面站 Windows x64 运行包
 
 请解压整个文件夹，关闭旧地面站后运行 NexusGround.exe。
+首次运行会显示离线激活窗口：导出 .ngreq 申请给管理员，收到 .nglic 后导入。
+可运行 License-Information.cmd 查看授权信息或续期。
+客户运行包不含私钥或管理员签发工具。
 保留所有 DLL、qml、platforms 和 gstreamer-plugins，不能只复制 EXE。
 视频页可选择“云台方案”或“算法板方案”；载荷控制分别连接 9000/9001。
 MK22 默认主控 192.168.2.36；Wi-Fi 调试使用 192.168.1.104。
@@ -109,6 +115,7 @@ New-Item -ItemType Directory -Force $env:APPDATA, $env:LOCALAPPDATA | Out-Null
 $process = Start-Process $exe -WorkingDirectory $package -ArgumentList '--log-output' `
     -RedirectStandardOutput "$build\startup-stdout.log" -RedirectStandardError "$build\startup-stderr.log" -PassThru
 $guiStartupVerified = $false
+$activationGateVerified = $false
 $guiStartupFailure = $null
 try {
     Start-Sleep -Seconds 30
@@ -119,13 +126,16 @@ try {
     }
     $report = [string](Get-Content $env:QGC_CI_STARTUP_REPORT -Raw -ErrorAction Stop)
     if ([string]::IsNullOrWhiteSpace($report)) { throw 'Startup report is empty' }
-    if ($report -notmatch 'root_window_created=true' -or $report -notmatch 'window_visible=true') {
-        throw '启动检查失败：Qt 未创建可见的地面站主窗口，请查看启动日志'
+    if ($report -notmatch 'activation_required=true' -or
+        $report -notmatch 'activation_dialog_created=true' -or
+        $report -notmatch 'main_services_started=false' -or
+        $report -notmatch 'window_visible=true') {
+        throw '未授权的运行包没有正确停留在可见激活窗口，拒绝发布'
     }
-    if ($report -notmatch 'portable_video_environment=true') {
-        throw 'Direct EXE startup did not isolate its video environment'
-    }
-    $guiStartupVerified = $true
+    $activationGateVerified = $true
+    # The owner private key is never sent to CI. Native disposable-key tests
+    # cover successful activation; this exact production EXE must stay locked.
+    # Portable video environment/native decoding are tested separately above.
 } catch {
     $guiStartupFailure = $_.Exception.Message
     if (-not $AllowUnverifiedGui) { throw }
@@ -135,6 +145,7 @@ try {
     Get-ChildItem (Join-Path $env:USERPROFILE 'Documents') -Filter 'QGCConsole.log' -Recurse -ErrorAction SilentlyContinue |
         Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName "$build\startup-console.log" -Force }
 }
+$info.activation_gate_startup_verified = $activationGateVerified
 $info.gui_startup_verified = $guiStartupVerified
 $info.gui_startup_failure = $guiStartupFailure
 $info.gui_video_frames_verified = $false
@@ -145,6 +156,9 @@ $info | ConvertTo-Json | Set-Content "$package\BUILD_INFO.json" -Encoding utf8
 $logs = (Get-Content "$build\startup-stdout.log", "$build\startup-stderr.log" -Raw -ErrorAction SilentlyContinue) -join "`n"
 if ($logs -match 'QQmlApplicationEngine failed to load component|module "[^"]+" is not installed|Failed to create OpenGL context|unable to find qmlglsink') {
     throw '启动检查发现缺失 QML 模块或渲染初始化失败，请查看日志'
+}
+if (Get-ChildItem $package -Include '*.private.pem', '*.nglic', '*.ngreq' -Recurse) {
+    throw 'Customer runtime unexpectedly contains a signing secret or preissued license'
 }
 # Exercise real native decoding and EXE startup in a Chinese package path,
 # then give the downloadable archive its normal top-level directory.

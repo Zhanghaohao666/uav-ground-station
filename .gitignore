@@ -114,3 +114,11 @@ tests/payload_controls/target_wrapper.sh
 tests/video_receiver_native/Makefile*
 tests/video_receiver_native/receiver_tests
 tests/video_receiver_native/target_wrapper.sh
+
+# Offline license owner secrets must never enter the public repository
+*.private.pem
+*.nglic
+*.ngreq
+__pycache__/
+/license-owner/
+/license-private/

@@ -11,7 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install isolated test dependencies
-        run: sudo apt-get update && sudo apt-get install -y qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2 libunwind-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-good gstreamer1.0-libav
+        run: sudo apt-get update && sudo apt-get install -y qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2 libunwind-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-good gstreamer1.0-libav libssl-dev python3-pip
+      - name: Check offline licensing with disposable keys
+        run: |
+          python3 -m pip install -r tools/licensing/requirements.txt
+          python3 -m unittest discover -s tests/licensing -p test_authority.py -v
+          mkdir -p /tmp/offline-license-tests
+          python3 tests/licensing/make_fixtures.py /tmp/offline-license-tests/fixtures.json
+          cd /tmp/offline-license-tests
+          qmake "$GITHUB_WORKSPACE/tests/licensing/licensing.pro"
+          make -j2
+          QT_QPA_PLATFORM=offscreen NEXUS_LICENSE_FIXTURES=/tmp/offline-license-tests/fixtures.json ./licensing_tests
       - name: Check QML syntax
         run: qmllint xsrc/XUI/XUI.qml xsrc/XUI/XBoardRecordingDialog.qml xsrc/XUI/XPayloadControlPanel.qml
       - name: Check production portable video environment isolation

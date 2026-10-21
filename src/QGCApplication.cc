@@ -36,6 +36,7 @@
 
 #include "QGC.h"
 #include "QGCApplication.h"
+#include "Licensing/ActivationDialog.h"
 #include "CmdLineOptParser.h"
 #include "UDPLink.h"
 #include "LinkManager.h"
@@ -282,6 +283,13 @@ QGCApplication::QGCApplication(int &argc, char* argv[], bool unitTesting)
     setApplicationName("NexusGround");
     setOrganizationName(QGC_ORG_NAME);
     setOrganizationDomain(QGC_ORG_DOMAIN);
+    setApplicationVersion(QString(APP_VERSION_STR));
+
+    // Preflight authorization precedes GStreamer, toolbox, links and video.
+    if (!_runningUnitTests && !NexusLicense::ensureActivated()) {
+        _activationCancelled = true;
+        return;
+    }
 
     this->setApplicationVersion(QString(APP_VERSION_STR));
 
@@ -1100,7 +1108,7 @@ bool QGCApplication::compressEvent(QEvent*event, QObject* receiver, QPostEventLi
 
 bool QGCApplication::event(QEvent *e)
 {
-    if (e->type() == QEvent::Quit) {
+    if (e->type() == QEvent::Quit && _mainRootWindow) {
         // On OSX if the user selects Quit from the menu (or Command-Q) the ApplicationWindow does not signal closing. Instead you get a Quit event here only.
         // This in turn causes the standard QGC shutdown sequence to not run. So in this case we close the window ourselves such that the
         // signal is sent and the normal shutdown sequence runs.

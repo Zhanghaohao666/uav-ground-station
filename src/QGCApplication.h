@@ -68,6 +68,10 @@ public:
 
     /// @brief Returns true if unit tests are being run
     bool runningUnitTests(void) const{ return _runningUnitTests; }
+    bool activationCancelled() const { return _activationCancelled; }
+private:
+    bool _activationCancelled = false;
+public:
 
     /// @brief Returns true if Qt debug output should be logged to a file
     bool logOutput(void) const{ return _logOutput; }

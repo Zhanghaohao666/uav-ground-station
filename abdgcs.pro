@@ -26,6 +26,7 @@ message(Qt version $$[QT_VERSION])
 }
 
 include(QGCCommon.pri)
+include(src/Licensing/licensing.pri)
 
 TARGET   = NexusGround
 TEMPLATE = app

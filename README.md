@@ -1,5 +1,10 @@
 # 无人机地面站
 
+新增离线授权功能：**v1.01.12-offline-license-rc1**，基于自适应视频候选版。
+首次运行导出 `.ngreq` 授权申请，由管理员签发 `.nglic` 后导入；可离线使用，支持永久/限期及电脑绑定。
+客户运行包不含私钥，签发工具单独提供，详见 [离线授权操作说明](project-docs/OFFLINE_LICENSING.md)。
+Windows 新运行包以对应 Release/成功 CI 为准；旧版公开下载不会自动失效。
+
 当前发布：**v1.01.09-windows — Windows x64 可运行包**。功能基于 v1.01.09-dual-control（独立算法板控制与公共视频地址修复），原工程为用户提供的 `v1.01.09_fix_gimbal_tcp` Qt/QGroundControl 工程。
 
 **直接运行请下载 [Windows 完整 ZIP](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.09-windows/NexusGround-Windows-x64_v1.01.09-windows_20261012.zip)**，完整解压后运行 `NexusGround.exe`，保留所有 DLL/QML/视频插件。无需安装 Qt、GStreamer 或编译器。原版可以保留；启动新版前关闭旧程序。
