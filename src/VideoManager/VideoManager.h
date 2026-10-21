@@ -180,6 +180,7 @@ protected:
     void _restartAllVideos          ();
     void _restartVideo              (unsigned id);
     bool _receiverWanted(unsigned id) const;
+    QString _playbackUri(unsigned id) const;
     void _syncReceiver(unsigned id);
     void _loadRequestedStreams();
     void _saveRequestedStreams();
@@ -196,6 +197,7 @@ protected:
     VideoReceiver*          _videoReceiver[kStreamCount]       = {};
     void*                   _videoSink[kStreamCount]           = {};
     QString                 _videoUri[kStreamCount];
+    QString                 _activeVideoUri[kStreamCount];
     // FIXME: AV: _videoStarted seems to be access from 3 different threads, from time to time
     // 1) Video Receiver thread
     // 2) Video Manager/main app thread

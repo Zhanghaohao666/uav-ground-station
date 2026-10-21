@@ -13,9 +13,17 @@ function repairShared(facts) {
 // Only the actual tracking input may send point/box commands. A preview URL
 // in an algorithm-labelled slot must never redirect clicks to the tracker.
 function controlTarget(uri) {
-    var match = /^rtsp:\/\/[^\/]+\/(algorithm|gimbal|live\/0)\/?(?:\?.*)?$/.exec(String(uri || "").trim());
+    var match = /^rtsp:\/\/[^\/]+\/(algorithm(?:_low)?|gimbal(?:_low)?|live\/0)\/?(?:\?.*)?$/.exec(String(uri || "").trim());
     if (!match) return "";
-    return match[1] === "algorithm" ? "algorithm" : "gimbal";
+    return match[1].indexOf("algorithm") === 0 ? "algorithm" : "gimbal";
+}
+
+// Low previews preserve the complete 16:9 tracking image. Commands must stay in
+// the original 1920x1080 tracker coordinates, not the decoded 640x360 pixels.
+function controlFrameSize(uri, decodedWidth, decodedHeight) {
+    if (controlTarget(uri) && decodedWidth <= 640 && decodedHeight <= 360)
+        return { width: 1920, height: 1080 };
+    return { width: decodedWidth, height: decodedHeight };
 }
 
 function profile(mode) {

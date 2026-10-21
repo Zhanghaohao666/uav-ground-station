@@ -1274,6 +1274,8 @@ Item {
                 property bool decoding: false
                 property int sourceVideoWidth: 1920
                 property int sourceVideoHeight: 1080
+                readonly property var controlFrameSize: VideoProfiles.controlFrameSize(
+                    rtspFact ? rtspFact.rawValue : "", sourceVideoWidth, sourceVideoHeight)
                 property bool selectionDragging: false
                 property real selectionStartX: 0
                 property real selectionStartY: 0
@@ -1461,7 +1463,7 @@ Item {
 
                             var point = VideoCoordinateMapper.mapPoint(
                                         mouse.x, mouse.y, width, height,
-                                        sourceVideoWidth, sourceVideoHeight)
+                                        controlFrameSize.width, controlFrameSize.height)
                             if (!point) {
                                 showSelectionFeedback(qsTr("Click inside the video image"), 0, 0, 0, 0, 0)
                                 console.log("TRACK_XY rejected: click is outside displayed video")
@@ -1489,7 +1491,7 @@ Item {
 
                             var point = VideoCoordinateMapper.mapPoint(
                                         mouse.x, mouse.y, width, height,
-                                        sourceVideoWidth, sourceVideoHeight)
+                                        controlFrameSize.width, controlFrameSize.height)
                             if (!point) {
                                 selectionDragging = false
                                 showSelectionFeedback(qsTr("Click inside the video image"), 0, 0, 0, 0, 0)
@@ -1509,7 +1511,7 @@ Item {
                             }
 
                             var rect = VideoCoordinateMapper.displayRect(
-                                        width, height, sourceVideoWidth, sourceVideoHeight)
+                                        width, height, controlFrameSize.width, controlFrameSize.height)
                             selectionCurrentX = Math.max(rect.x, Math.min(mouse.x, rect.x + rect.width))
                             selectionCurrentY = Math.max(rect.y, Math.min(mouse.y, rect.y + rect.height))
                         }
@@ -1521,7 +1523,7 @@ Item {
 
                             var box = VideoCoordinateMapper.mapSelection(
                                         selectionStartX, selectionStartY, mouse.x, mouse.y,
-                                        width, height, sourceVideoWidth, sourceVideoHeight)
+                                        width, height, controlFrameSize.width, controlFrameSize.height)
                             selectionDragging = false
                             if (!box) {
                                 showSelectionFeedback(qsTr("Drag a non-empty box inside video"), 0, 0, 0, 0, 0)

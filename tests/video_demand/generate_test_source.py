@@ -6,10 +6,10 @@ import re
 here=Path(__file__).resolve().parent
 root=here.parents[1]
 source=(root/'src/VideoManager/VideoManager.cc').read_text()
-methods=['requestedStreamMask','_loadRequestedStreams','_saveRequestedStreams','setVideoStreamVisible','_receiverWanted','_syncReceiver','_handleStartComplete','_handleStopComplete','startVideo','stopVideo','startVideoStream','stopVideoStream','_startReceiver','_stopReceiver','_restartVideo','_initVideoSink']
+methods=['requestedStreamMask','_loadRequestedStreams','_saveRequestedStreams','setVideoStreamVisible','_receiverWanted','_playbackUri','_syncReceiver','_handleStartComplete','_handleStopComplete','startVideo','stopVideo','startVideoStream','stopVideoStream','_startReceiver','_stopReceiver','_restartVideo','_initVideoSink']
 result=[]
 for name in methods:
- m=re.search(r'(?:void|bool|int)\s+VideoManager::'+name+r'\([^)]*\)(?: const)?\s*\{',source)
+ m=re.search(r'(?:void|bool|int|QString)\s+VideoManager::'+name+r'\([^)]*\)(?: const)?\s*\{',source)
  assert m,name
  pos=m.end();depth=1
  while depth:

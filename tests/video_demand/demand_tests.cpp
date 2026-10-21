@@ -9,6 +9,7 @@
 #include <QPointer>
 #include <QTimer>
 #include "../../src/VideoReceiver/VideoReceiver.h"
+#include "../../src/VideoManager/VideoQualityPolicy.h"
 Q_LOGGING_CATEGORY(VideoManagerLog, "demand.tests")
 struct Fact { QVariant value; QVariant rawValue() const {return value;} void setRawValue(QVariant v) {value=v;} };
 struct VideoSettings {
@@ -43,7 +44,7 @@ public:
  VideoSettings settings; VideoSettings* _videoSettings=&settings;
  FakeReceiver receivers[kStreamCount]; VideoReceiver* _videoReceiver[kStreamCount]={};
  void* _videoSink[kStreamCount]={}; QPointer<QQuickItem> _videoSinkWidget[kStreamCount];
- QString _videoUri[kStreamCount], configuredUri[kStreamCount];
+ QString _videoUri[kStreamCount], configuredUri[kStreamCount], _activeVideoUri[kStreamCount];
  bool _videoStarted[kStreamCount]={},_videoEnabled[kStreamCount]={},_videoVisible[kStreamCount]={},
       _videoStarting[kStreamCount]={},_videoStopping[kStreamCount]={},_lowLatencyStreaming[kStreamCount]={};
  bool _videoSuspended=false; QTimer* _videoRetryTimer[kStreamCount]={};
@@ -60,14 +61,15 @@ public:
  }
  bool _updateSettings(unsigned id){bool changed=_videoUri[id]!=configuredUri[id];_videoUri[id]=configuredUri[id];return changed;}
  int requestedStreamMask() const; void _loadRequestedStreams(); void _saveRequestedStreams();
- Q_INVOKABLE void setVideoStreamVisible(int,bool); bool _receiverWanted(unsigned) const; void _syncReceiver(unsigned);
+ Q_INVOKABLE void setVideoStreamVisible(int,bool); bool _receiverWanted(unsigned) const; QString _playbackUri(unsigned) const; void _syncReceiver(unsigned);
  void _handleStartComplete(unsigned,VideoReceiver::STATUS); void _handleStopComplete(unsigned,VideoReceiver::STATUS);
  void startVideo();void stopVideo();Q_INVOKABLE void startVideoStream(int);Q_INVOKABLE void stopVideoStream(int);
  void _startReceiver(unsigned);void _stopReceiver(unsigned);void _restartVideo(unsigned);void _initVideoSink(QQuickItem*,unsigned);
  Q_INVOKABLE void setProfileUri(int i,QString uri){configuredUri[i]=uri;_restartVideo(i);}
  Q_INVOKABLE QString getProfileUri(int i) const {return configuredUri[i];}
  void showAll(){for(int i=0;i<kStreamCount;++i)setVideoStreamVisible(i,true);}
- void startAll(){for(int i=0;i<kStreamCount;++i){setVideoStreamVisible(i,true);startVideoStream(i);receivers[i].finishStart();}}
+ void settle(){for(int pass=0;pass<3;++pass)for(int i=0;i<kStreamCount;++i){if(_videoStopping[i])receivers[i].finishStop();if(_videoStarting[i])receivers[i].finishStart();}}
+ void startAll(){for(int i=0;i<kStreamCount;++i){setVideoStreamVisible(i,true);startVideoStream(i);settle();}}
 signals:
  void requestedStreamMaskChanged();
 };
@@ -92,6 +94,38 @@ class DemandTests : public QObject {
   return !result.isError() && result.toBool();
  }
 private slots:
+ void multipleStreamsUseLowAndFullscreenReturnsToHd() {
+  VideoManager m;
+  m.configuredUri[0]="rtsp://192.168.2.36:8554/board";
+  m.configuredUri[2]="rtsp://192.168.2.36:8554/algorithm";
+  m._restartVideo(0);m._restartVideo(2);
+  m.setVideoStreamVisible(0,true);m.settle();
+  QCOMPARE(m.receivers[0].lastUri,m.configuredUri[0]);
+  m.setVideoStreamVisible(2,true);m.startVideoStream(2);m.settle();
+  QCOMPARE(m.receivers[0].lastUri,QString("rtsp://192.168.2.36:8554/board_low"));
+  QCOMPARE(m.receivers[2].lastUri,QString("rtsp://192.168.2.36:8554/algorithm_low"));
+  m.setVideoStreamVisible(0,false);m.settle();
+  QCOMPARE(m.receivers[2].lastUri,m.configuredUri[2]);
+  QCOMPARE(m.configuredUri[0],QString("rtsp://192.168.2.36:8554/board"));
+  QCOMPARE(m.requestedStreamMask(),5);
+  m.setVideoStreamVisible(0,true);m.settle();
+  QCOMPARE(m.receivers[2].lastUri,QString("rtsp://192.168.2.36:8554/algorithm_low"));
+ }
+ void qualityPolicyPreservesCustomUrlsAndQuery() {
+  QCOMPARE(uavPlaybackUri("rtsp://custom:554/live/0",true),QString("rtsp://custom:554/live/0"));
+  QCOMPARE(uavPlaybackUri("rtsp://host:8554/algorithm_low",true),QString("rtsp://host:8554/algorithm_low"));
+  QCOMPARE(uavPlaybackUri("rtsp://host:8555/gimbal?tcp=1",true),QString("rtsp://host:8555/gimbal_low?tcp=1"));
+ }
+ void lowPreviewCoordinatesRemainInOriginalTrackerFrame() {
+  QJSEngine js;QFile file("../../xsrc/XUI/XVideoProfiles.js");QVERIFY(file.open(QIODevice::ReadOnly));
+  QVERIFY(!js.evaluate(QString::fromUtf8(file.readAll())).isError());
+  auto size=js.globalObject().property("controlFrameSize").call({"rtsp://192.168.2.36:8554/algorithm",640,360});
+  QCOMPARE(size.property("width").toInt(),1920);QCOMPARE(size.property("height").toInt(),1080);
+  QFile mapper("../../xsrc/XUI/XVideoCoordinateMapper.js");QVERIFY(mapper.open(QIODevice::ReadOnly));
+  auto text=QString::fromUtf8(mapper.readAll());text.remove(".pragma library");QVERIFY(!js.evaluate(text).isError());
+  auto center=js.globalObject().property("mapPoint").call({320,180,640,360,1920,1080});
+  QCOMPARE(center.property("x").toInt(),960);QCOMPARE(center.property("y").toInt(),540);
+ }
  void initTestCase(){QCoreApplication::setOrganizationName("UAVDemandTest");QCoreApplication::setApplicationName("isolated");QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,temp.path());}
  void init(){QSettings().clear();}
  void startupDoesNotPullHiddenStreams(){VideoManager m;m.startVideo();for(auto& r:m.receivers)QCOMPARE(r.starts,0);m.showAll();QCOMPARE(m.receivers[0].starts,1);for(int i=1;i<VideoManager::kStreamCount;++i)QCOMPARE(m.receivers[i].starts,0);}
@@ -127,15 +161,15 @@ private slots:
   QCOMPARE(m.configuredUri[0],shared0);QCOMPARE(m.configuredUri[1],shared1);
   QCOMPARE(m.requestedStreamMask(),15);
   for(int i=2;i<6;++i)m.receivers[i].finishStop();
-  QCOMPARE(m.receivers[2].lastUri,QString("rtsp://192.168.2.36:8555/gimbal"));
-  QCOMPARE(m.receivers[3].lastUri,QString("rtsp://192.168.2.36:8556/gimbal_ir"));
+  QCOMPARE(m.receivers[2].lastUri,QString("rtsp://192.168.2.36:8555/gimbal_low"));
+  QCOMPARE(m.receivers[3].lastUri,QString("rtsp://192.168.2.36:8556/gimbal_ir_low"));
   QCOMPARE(m.receivers[4].starts,1);QCOMPARE(m.receivers[5].starts,1);
  }
  void rapidPresetSwitchUsesLatestUrlsAfterAsyncStop() {
   VideoManager m;m.startAll();QVERIFY(applyPreset(m,"gimbal"));QVERIFY(applyPreset(m,"algorithm"));
   for(int i=2;i<6;++i)m.receivers[i].finishStop();
-  QCOMPARE(m.receivers[2].lastUri,QString("rtsp://192.168.2.36:8554/algorithm"));
-  QCOMPARE(m.receivers[3].lastUri,QString("rtsp://192.168.2.36:8554/preview"));
+  QCOMPARE(m.receivers[2].lastUri,QString("rtsp://192.168.2.36:8554/algorithm_low"));
+  QCOMPARE(m.receivers[3].lastUri,QString("rtsp://192.168.2.36:8554/preview_low"));
   QVERIFY(!m._videoEnabled[4]);
   QCOMPARE(m.receivers[5].starts,1);QCOMPARE(m.requestedStreamMask(),15);
   for(int i=0;i<2;++i)QCOMPARE(m.receivers[i].stops,0);
@@ -158,9 +192,9 @@ private slots:
  }
  void repairsOnlyBadSharedCameraKeepsCorrectCameraAndSelection() {
   VideoManager m;m.configuredUri[0]="rtsp://192.168.2.36:8554/board";m.configuredUri[1]="rtsp://192.168.2.36:8554/preview";
-  m.startAll();QVERIFY(applyPreset(m,"gimbal"));
-  QCOMPARE(m.receivers[0].stops,0);QCOMPARE(m.receivers[1].stops,1);
-  m.receivers[1].finishStop();QCOMPARE(m.receivers[1].lastUri,QString("rtsp://192.168.2.36:8554/rgb"));
+  m.startAll();const int boardStops=m.receivers[0].stops;const int rgbStops=m.receivers[1].stops;QVERIFY(applyPreset(m,"gimbal"));
+  QCOMPARE(m.receivers[0].stops,boardStops);QCOMPARE(m.receivers[1].stops,rgbStops+1);
+  m.receivers[1].finishStop();QCOMPARE(m.receivers[1].lastUri,QString("rtsp://192.168.2.36:8554/rgb_low"));
   QCOMPARE(m.requestedStreamMask(),15);
  }
  void knownDebugSharedAddressMigratesToMk22AndEmptySharedGetsDefaults() {

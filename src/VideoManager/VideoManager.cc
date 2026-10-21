@@ -23,6 +23,7 @@
 
 #include "ScreenToolsController.h"
 #include "VideoManager.h"
+#include "VideoQualityPolicy.h"
 #include "QGCToolbox.h"
 #include "QGCCorePlugin.h"
 #include "QGCOptions.h"
@@ -480,14 +481,31 @@ bool VideoManager::_receiverWanted(unsigned id) const
            !_videoUri[id].trimmed().isEmpty();
 }
 
+QString VideoManager::_playbackUri(unsigned id) const
+{
+    int visibleCount = 0;
+    for (unsigned i = 0; i < static_cast<unsigned>(kStreamCount); ++i) {
+        if (_receiverWanted(i)) ++visibleCount;
+    }
+    return id < static_cast<unsigned>(kStreamCount)
+            ? uavPlaybackUri(_videoUri[id], visibleCount > 1) : QString();
+}
+
 void VideoManager::_syncReceiver(unsigned id)
 {
     if (id >= static_cast<unsigned>(kStreamCount)) return;
-    if (_receiverWanted(id)) {
-        _startReceiver(id);
-    } else {
-        if (_videoRetryTimer[id]) _videoRetryTimer[id]->stop();
-        _stopReceiver(id);
+    // A visibility/subscription change can change the quality of every receiver.
+    // Stop obsolete subscriptions first; async completion starts the latest URI.
+    for (unsigned i = 0; i < static_cast<unsigned>(kStreamCount); ++i) {
+        const bool wanted = _receiverWanted(i);
+        if (!wanted || ((_videoStarted[i] || _videoStarting[i]) &&
+                        _activeVideoUri[i] != _playbackUri(i))) {
+            if (_videoRetryTimer[i]) _videoRetryTimer[i]->stop();
+            _stopReceiver(i);
+        }
+    }
+    for (unsigned i = 0; i < static_cast<unsigned>(kStreamCount); ++i) {
+        if (_receiverWanted(i)) _startReceiver(i);
     }
 }
 
@@ -497,7 +515,7 @@ void VideoManager::_handleStartComplete(unsigned id, VideoReceiver::STATUS statu
     if (status == VideoReceiver::STATUS_OK || status == VideoReceiver::STATUS_INVALID_STATE) {
         _videoStarted[id] = true;
         // Visibility may have changed while the receiver was starting.
-        if (!_receiverWanted(id)) {
+        if (!_receiverWanted(id) || _activeVideoUri[id] != _playbackUri(id)) {
             _stopReceiver(id);
         } else if (!_videoStopping[id] && _videoSink[id] != nullptr) {
             _videoReceiver[id]->startDecoding(_videoSink[id]);
@@ -1152,15 +1170,8 @@ VideoManager::_restartVideo(unsigned id)
         return;
     }
 
-    const bool settingsChanged = _updateSettings(id);
-    if (!_receiverWanted(id)) {
-        _syncReceiver(id);
-    } else if (settingsChanged && (_videoStarted[id] || _videoStarting[id])) {
-        // Stop completion starts the latest URI only if it is still wanted.
-        _stopReceiver(id);
-    } else {
-        _syncReceiver(id);
-    }
+    _updateSettings(id);
+    _syncReceiver(id);
 #endif
 }
 
@@ -1189,7 +1200,9 @@ VideoManager::_startReceiver(unsigned id)
     const unsigned timeout = source == VideoSettings::videoSourceRTSP
             ? _videoSettings->rtspTimeout()->rawValue().toUInt() : 2;
     _videoStarting[id] = true;
-    _videoReceiver[id]->start(_videoUri[id], timeout, _lowLatencyStreaming[id] ? -1 : 0);
+    _activeVideoUri[id] = _playbackUri(id);
+    qCDebug(VideoManagerLog) << "Playback" << id << _activeVideoUri[id];
+    _videoReceiver[id]->start(_activeVideoUri[id], timeout, _lowLatencyStreaming[id] ? -1 : 0);
 #else
     Q_UNUSED(id);
 #endif
