@@ -11,7 +11,11 @@
 - 录像窗口说明连接码用途，增加跳转维护入口；“全选当前方案”更名为符合实际行为的“全选可用视频”。
 - 不修改视频订阅、算法、板端程序及开机配置；原激活码和管理员工具继续有效。
 
-实板 SSH 跳转、状态及主控交互菜单已只读验证，选择 0 退出。Windows 完整构建和实际面板检查进行中。
+实板 SSH 跳转、状态及主控交互菜单已只读验证，选择 0 退出，未执行重启或切换。
+[Windows 完整构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39788351215) 与 [Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39788346339) 通过。
+Windows 维护面板/配置 12 项、原授权两组各 29 项、正式激活中文、原生 TCP/UDP 各 10 帧与环境隔离通过。
+最终包内维护/录像/方案 QML/JS 与源码一致，SSH 客户端校验及实际 Windows 维护面板截图已复核。
+编译提交 `40c71352be18342d0c07b82e43f3d962eaec252d`。用户电脑实际密码输入及现场操作仍需验收。
 
 
 ## v1.01.13-activation-code-rc1 — 粘贴激活码

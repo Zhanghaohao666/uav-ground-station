@@ -1,18 +1,25 @@
 # 无人机地面站
 
-当前开发版本：**v1.01.14-board-maintenance-rc1 — 板卡维护和 SSH 终端**。
+当前 Windows 候选运行包：**v1.01.14-board-maintenance-rc1 — 板卡维护和 SSH 终端**。
+
+**[下载 Windows x64 完整运行包，约 181 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.14-board-maintenance-rc1/NexusGround-Windows-x64_v1.01.14-board-maintenance-rc1_20261022.zip)**。完整解压到新目录后运行 `NexusGround.exe`，保留全部文件及 `ssh` 子目录。
 
 视频页新增“板卡维护”：打开主控和算法板的独立交互 SSH 终端，算法板默认经主控跳转。
 提供状态/地址、原有 uav-switch 菜单、分路重启、日志、录像连接码等快捷操作。无需互联网安装 SSH，仍需局域网连通。
 详见 [板卡维护说明](project-docs/BOARD_MAINTENANCE.md) 和 [板端录像说明](project-docs/BOARD_RECORDING.md)。
 
 保留机器码/粘贴激活码、已保存授权、MK22 两套方案、单路高清/多路按需低码率、独立双控制和板端高清录像。
-本次无需更新板端程序；现有管理员签发工具继续适用。Windows 完整运行包正在构建，验收后更新下载链接。
+本次无需更新板端程序；现有管理员签发工具继续适用。
+[Windows 完整构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39788351215) 与 [Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39788346339) 已通过。
+维护面板/路由/真实 SSH 中文路径配置 12 项、原授权两组各 29 项、正式激活中文及 TCP/UDP 解码检查通过。
+最终包内的维护 QML 资源与源码一致，SSH 客户端与固定校验的微软原包逐字节一致，实际 Windows 维护面板截图已复核。
+实板只读验证 SSH 跳转和主控菜单；用户 Windows 上的实际手工密码输入、板端操作和 MK22 现场效果仍需使用者验收。
 
 ## 版本导航
 
 | 标签 | 日期 | 主要内容 |
 |---|---|---|
+| [v1.01.14-board-maintenance-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.14-board-maintenance-rc1) | 2026-10-22 | 离线 SSH 终端、主控跳转、分路恢复及录像连接码提示 |
 | [v1.01.13-activation-code-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.13-activation-code-rc1) | 2026-10-22 | 粘贴激活码、自动保存、管理员生成与复制；兼容旧授权 |
 | [v1.01.12-offline-license-rc4](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.12-offline-license-rc4) | 2026-10-22 | 激活中文修复、双代码页和正式窗口文字检查 |
 | [v1.01.12-offline-license-rc2](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.12-offline-license-rc2) | 2026-10-22 | 离线机器码授权及独立签发工具（窗口乱码，请用 rc4） |
