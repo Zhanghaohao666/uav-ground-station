@@ -42,12 +42,8 @@ Host nexus-algorithm
     $env:SSH_ASKPASS_PROMPT = ''
     $env:NEXUS_BOARD_AUTO_LOGIN = '1'
     $env:PATH = $directory + ';' + (Split-Path $ssh) + ';' + $env:PATH
-    $modes = @(
-        @{ name='quoted'; value=('"'+$helper+'"') },
-        @{ name='forward-slash'; value=$helper.Replace('\','/') },
-        @{ name='quoted-forward'; value=('"'+$helper.Replace('\','/')+'"') },
-        @{ name='basename'; value='NexusBoardAskpass.exe' }
-    )
+    if ($info.board_askpass_lookup -ne 'basename-in-private-child-path') { throw 'Customer package does not include the Unicode askpass fix' }
+    $modes = @(@{ name='basename'; value='NexusBoardAskpass.exe' })
     $checks = @()
     Push-Location -LiteralPath $directory
     try {

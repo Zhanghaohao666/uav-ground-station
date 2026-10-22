@@ -62,14 +62,22 @@ BoardSshLaunch plan(const QVariantMap& c, const QString& role, const QString& cl
     result.arguments=QStringList{"-F",QFileInfo(path).fileName(),terminal?"-tt":"-T"};
     if (!terminal) result.arguments<<"-n";
     result.arguments<<"nexus-"+role;
-    result.environment={{"SSH_ASKPASS",QDir::toNativeSeparators(askpass)}, {"SSH_ASKPASS_REQUIRE","force"}, {"NEXUS_BOARD_AUTO_LOGIN","1"}, {"SSH_ASKPASS_PROMPT",""}};
+    result.askpassDirectory=QFileInfo(askpass).absolutePath();
+#ifdef Q_OS_WIN
+    // Win32 OpenSSH getenv() loses non-ASCII absolute paths. CreateProcessW
+    // can resolve an ASCII basename using the inherited Unicode PATH instead.
+    const QString helper=QFileInfo(askpass).fileName();
+#else
+    const QString helper=askpass;
+#endif
+    result.environment={{"SSH_ASKPASS",helper}, {"SSH_ASKPASS_REQUIRE","force"}, {"NEXUS_BOARD_AUTO_LOGIN","1"}, {"SSH_ASKPASS_PROMPT",""}};
     return result;
 }
 QProcessEnvironment environment(const BoardSshLaunch& p) {
     auto result=QProcessEnvironment::systemEnvironment();
     for(auto i=p.environment.begin();i!=p.environment.end();++i)result.insert(i.key(),i.value());
 #ifdef Q_OS_WIN
-    result.insert("PATH",QDir::toNativeSeparators(QFileInfo(p.program).absolutePath())+";"+result.value("PATH"));
+    result.insert("PATH",QDir::toNativeSeparators(p.askpassDirectory)+";"+QDir::toNativeSeparators(QFileInfo(p.program).absolutePath())+";"+result.value("PATH"));
 #endif
     return result;
 }

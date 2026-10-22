@@ -114,7 +114,7 @@ QString XBoardMaintenanceController::quotePowerShell(const QString& value) { QSt
 QString XBoardMaintenanceController::windowsScript(const BoardSshLaunch& plan) {
     QString script = "$ErrorActionPreference='Stop'; [Console]::InputEncoding=[Text.UTF8Encoding]::new($false); "
         "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); $OutputEncoding=[Console]::OutputEncoding; "
-        "Set-Location -LiteralPath " + quotePowerShell(plan.workingDirectory) + "; $env:TERM='xterm-256color'; $env:PATH=" + quotePowerShell(QFileInfo(plan.program).absolutePath() + ";") + "+$env:PATH; & " + quotePowerShell(plan.program);
+        "Set-Location -LiteralPath " + quotePowerShell(plan.workingDirectory) + "; $env:TERM='xterm-256color'; $env:PATH=" + quotePowerShell(plan.askpassDirectory + ";" + QFileInfo(plan.program).absolutePath() + ";") + "+$env:PATH; & " + quotePowerShell(plan.program);
     for (auto i=plan.environment.begin();i!=plan.environment.end();++i)
         script = "$env:" + i.key() + "=" + quotePowerShell(i.value()) + "; " + script;
     for (const auto& arg : plan.arguments) script += " " + quotePowerShell(arg);

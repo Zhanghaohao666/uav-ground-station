@@ -8,6 +8,7 @@ struct BoardSshLaunch {
     QStringList arguments;
     QString title;
     QString workingDirectory;
+    QString askpassDirectory;
     QMap<QString, QString> environment;
 };
 namespace BoardSsh {

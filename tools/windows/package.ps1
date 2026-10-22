@@ -79,6 +79,7 @@ $info = [ordered]@{
     board_and_mk22_live_tested = $false
     ssh_terminal = 'external-interactive-console'
     board_ssh_login = 'automatic-fixed-dev-profile'
+    board_askpass_lookup = 'basename-in-private-child-path'
     board_recording_connection = 'automatic-ssh-bootstrap-no-code-entry'
     board_ssh_native_direct_and_jump_auth_verified = $true
     board_recording_native_ssh_bootstrap_verified = $true

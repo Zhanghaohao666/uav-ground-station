@@ -138,9 +138,18 @@ private slots:
         const QVariantMap config={{"mainHost","127.0.0.1"},{"mainPort",json["main_port"].toInt()},
             {"algorithmHost","127.0.0.1"},{"algorithmPort",json["algorithm_port"].toInt()},{"viaMain",true}};
         QTemporaryDir folder;QString error;
+        const QString unicode=folder.path()+QString::fromUtf8("/\xe4\xb8\xad\xe6\x96\x87 O'Brien");
+        QVERIFY(QDir().mkpath(unicode));
+        const QString relocated=unicode+"/"+QFileInfo(helper).fileName();
+        QVERIFY(QFile::copy(helper,relocated));
         for(const auto& role:{QString("main"),QString("algorithm")}) {
-            auto p=BoardSsh::plan(config,role,ssh,helper,folder.path()+QString::fromUtf8("/\xe4\xb8\xad\xe6\x96\x87 O'Brien"),&error,true);
-            QVERIFY2(!p.program.isEmpty(),qPrintable(error));p.arguments<<"nexus-test-auth";
+            auto p=BoardSsh::plan(config,role,ssh,relocated,unicode,&error,true);
+            QVERIFY2(!p.program.isEmpty(),qPrintable(error));
+#ifdef Q_OS_WIN
+            QCOMPARE(p.environment["SSH_ASKPASS"],QFileInfo(relocated).fileName());
+            QVERIFY(BoardSsh::environment(p).value("PATH").startsWith(QDir::toNativeSeparators(unicode)+";"));
+#endif
+            p.arguments<<"nexus-test-auth";
             QProcess process;process.setWorkingDirectory(p.workingDirectory);process.setProcessEnvironment(BoardSsh::environment(p));process.start(p.program,p.arguments);
             QVERIFY(process.waitForFinished(20000));
             QVERIFY2(process.exitCode()==0,process.readAllStandardError().constData());
