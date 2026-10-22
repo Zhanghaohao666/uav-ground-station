@@ -51,6 +51,9 @@ jobs:
       - name: 离线授权 Windows 原生校验及界面测试
         run: ./tools/windows/test-licensing.ps1
 
+      - name: SSH 维护终端及实际面板测试
+        run: ./tools/windows/test-maintenance.ps1
+
       - name: 编译新版地面站
         run: ./tools/windows/build.ps1
 

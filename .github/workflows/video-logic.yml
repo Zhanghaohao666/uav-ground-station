@@ -23,7 +23,13 @@ jobs:
           make -j2
           QT_QPA_PLATFORM=offscreen NEXUS_LICENSE_FIXTURES=/tmp/offline-license-tests/fixtures.json ./licensing_tests
       - name: Check QML syntax
-        run: qmllint xsrc/XUI/XUI.qml xsrc/XUI/XBoardRecordingDialog.qml xsrc/XUI/XPayloadControlPanel.qml
+        run: qmllint xsrc/XUI/XBoardMaintenanceDialog.qml xsrc/XUI/XUI.qml xsrc/XUI/XBoardRecordingDialog.qml xsrc/XUI/XPayloadControlPanel.qml
+      - name: Check SSH maintenance plans and actual QML panel
+        run: |
+          cd tests/board_maintenance
+          qmake maintenance.pro
+          make -j2
+          QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software ./maintenance_tests
       - name: Check production portable video environment isolation
         run: |
           mkdir -p /tmp/video-environment-build

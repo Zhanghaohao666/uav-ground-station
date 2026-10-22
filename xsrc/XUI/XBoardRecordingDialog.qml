@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 
 Dialog {
     id: dialog
+    signal maintenanceRequested()
     property var controller
     property var selectedKeys: []
     readonly property var snapshot: controller ? controller.status : ({})
@@ -42,9 +43,15 @@ Dialog {
         Label { text: qsTr("视频保存在主控数据盘。关闭窗口或地面站后，录像继续。"); color: "#dde7ef"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
         RowLayout {
             TextField { id: addressField; objectName: "recordingAddress"; placeholderText: qsTr("主控 IP"); Layout.preferredWidth: 190; enabled: !dialog.working }
-            TextField { id: codeField; objectName: "recordingCode"; placeholderText: qsTr("连接码（首次粘贴）"); echoMode: TextInput.Password; Layout.fillWidth: true; enabled: !dialog.working }
+            TextField { id: codeField; objectName: "recordingCode"; placeholderText: qsTr("录像连接码（首次粘贴）"); echoMode: TextInput.Password; Layout.fillWidth: true; enabled: !dialog.working }
             Button { objectName: "connectRecording"; text: qsTr("连接"); enabled: !dialog.working; onClicked: controller.configure(addressField.text, codeField.text, rememberBox.checked) }
         }
+        Label {
+            visible: !dialog.linked
+            text: qsTr("这里需要主控的录像连接码，不是软件激活码或 SSH 密码。可通过“板卡维护 → 主控快捷操作 → 查看录像连接码”获取。")
+            color: "#adbbc8"; wrapMode: Text.WordWrap; Layout.fillWidth: true
+        }
+        Button { text: qsTr("打开板卡维护，获取连接码"); visible: !dialog.linked; onClicked: dialog.maintenanceRequested() }
         RowLayout {
             CheckBox { id: rememberBox; text: qsTr("记住连接"); enabled: !dialog.working }
             BusyIndicator { running: dialog.working; implicitWidth: 24; implicitHeight: 24 }
@@ -53,7 +60,7 @@ Dialog {
         }
         Label { objectName: "recordingError"; visible: text.length > 0; text: controller ? controller.errorText : ""; color: "#ffbe85"; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         RowLayout {
-            Button { objectName: "selectAllRecording"; text: qsTr("全选当前方案"); enabled: dialog.linked; onClicked: dialog.selectedKeys = dialog.streams.filter(function(s) { return s.available }).map(function(s) { return s.key }) }
+            Button { objectName: "selectAllRecording"; text: qsTr("全选可用视频"); enabled: dialog.linked; onClicked: dialog.selectedKeys = dialog.streams.filter(function(s) { return s.available }).map(function(s) { return s.key }) }
             Label { text: qsTr("选择录像与打开预览相互独立"); color: "#adbbc8"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
         }
         ListView {

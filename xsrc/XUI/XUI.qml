@@ -184,7 +184,13 @@ Item {
     }
 
     XBoardRecordingController { id: boardRecordingController }
-    XBoardRecordingDialog { id: boardRecordingDialog; controller: boardRecordingController }
+    XBoardMaintenanceController { id: boardMaintenanceController }
+    XBoardMaintenanceDialog { id: boardMaintenanceDialog; controller: boardMaintenanceController }
+    XBoardRecordingDialog {
+        id: boardRecordingDialog
+        controller: boardRecordingController
+        onMaintenanceRequested: { boardRecordingDialog.close(); boardMaintenanceDialog.open() }
+    }
 
     XGimbalTcpController { id: gimbalTcpController }
     XAlgorithmTcpController { id: algorithmTcpController }
@@ -336,12 +342,13 @@ Item {
             height: Math.max(_margin * 2.8, 40)
             radius: 6
             color: XGlobalColor.background2
-            XButtonLabel {
+            Row {
                 anchors.right: parent.right
                 anchors.rightMargin: mainHome._gap
                 anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("板端录像")
-                onClicked: boardRecordingDialog.open()
+                spacing: mainHome._gap
+                XButtonLabel { text: qsTr("板卡维护"); onClicked: boardMaintenanceDialog.open() }
+                XButtonLabel { text: qsTr("板端录像"); onClicked: boardRecordingDialog.open() }
             }
             Row {
                 anchors.verticalCenter: parent.verticalCenter
@@ -364,7 +371,7 @@ Item {
                 }
                 XLabel {
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: videoProfileBar.width > 1050
+                    visible: videoProfileBar.width > 1200
                     text: videoProfileSettings.selectedMode === "custom" ? qsTr("当前：自定义地址") : qsTr("默认 MK22 地址；公共相机地址已检查")
                     color: XGlobalColor.label2
                     small: true

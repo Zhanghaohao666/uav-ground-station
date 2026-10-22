@@ -7,7 +7,8 @@
                     $$PWD/XUI \
                     $$PWD/XControls \
                     $$PWD/XImages \
-                    $$PWD/XModule/XTCP
+                    $$PWD/XModule/XTCP \
+                    $$PWD/XModule/XMaintenance
 
     # QML_IMPORT_PATH += xqmlui
 
@@ -24,12 +25,14 @@
     $$PWD/XModule/XTCP/XGimbalTcpController.h \
     $$PWD/XModule/XTCP/XAlgorithmTcpController.h \
     $$PWD/XModule/XTCP/XScriptTcpController.h \
-    $$PWD/XModule/XTCP/XBoardRecordingController.h
+    $$PWD/XModule/XTCP/XBoardRecordingController.h \
+    $$PWD/XModule/XMaintenance/XBoardMaintenanceController.h
 
     SOURCES += \
     $$PWD/XSingletons/XScreenToolsController.cc \
     $$PWD/XModule/XTCP/XTCPClient.cc \
     $$PWD/XModule/XTCP/XGimbalTcpController.cc \
     $$PWD/XModule/XTCP/XScriptTcpController.cc \
-    $$PWD/XModule/XTCP/XBoardRecordingController.cc
+    $$PWD/XModule/XTCP/XBoardRecordingController.cc \
+    $$PWD/XModule/XMaintenance/XBoardMaintenanceController.cc
 }

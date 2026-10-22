@@ -107,3 +107,5 @@ QmlTest 1.0 QmlTest.qml
 
 
 XPayloadControlPanel 1.0 XPayloadControlPanel.qml
+
+XBoardMaintenanceDialog 1.0 XBoardMaintenanceDialog.qml

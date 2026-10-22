@@ -39,3 +39,18 @@ $jomDir = Join-Path $env:RUNNER_TEMP 'gcs-jom'
 Expand-Archive -Path $jom -DestinationPath $jomDir -Force
 if (-not (Test-Path "$jomDir\jom.exe")) { throw 'JOM 解压失败' }
 "$jomDir" | Out-File $env:GITHUB_PATH -Append -Encoding utf8
+
+# Offline client only: no SSH server, service installation, or generated keys.
+$sshVersion = '10.4.0.0p1-Preview'
+$sshArchive = Get-VerifiedFile "https://github.com/PowerShell/Win32-OpenSSH/releases/download/$sshVersion/OpenSSH-Win64.zip" `
+    "OpenSSH-Win64-$sshVersion.zip" 'b67ff8becd203502190ec42ac7787c24c2cd3325ed7700485fe7a1c83d2a7957'
+$sshExtract = Join-Path $env:RUNNER_TEMP 'gcs-ssh-extract'
+$sshRoot = Join-Path $env:RUNNER_TEMP 'gcs-ssh-client'
+Expand-Archive -Path $sshArchive -DestinationPath $sshExtract -Force
+New-Item -ItemType Directory -Force $sshRoot | Out-Null
+foreach ($name in @('ssh.exe', 'ssh-keygen.exe', 'libcrypto.dll', 'LICENSE.txt', 'NOTICE.txt')) {
+    Copy-Item "$sshExtract/OpenSSH-Win64/$name" $sshRoot -Force
+}
+& "$sshRoot/ssh.exe" -V
+if ($LASTEXITCODE -ne 0) { throw 'Portable OpenSSH client did not start' }
+"GCS_SSH_ROOT=$sshRoot" | Out-File $env:GITHUB_ENV -Append -Encoding utf8

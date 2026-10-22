@@ -52,6 +52,7 @@
 #include "XAlgorithmTcpController.h"
 #include "XScriptTcpController.h"
 #include "XBoardRecordingController.h"
+#include "XBoardMaintenanceController.h"
 #include "QGCFileDialogController.h"
 #include "RCChannelMonitorController.h"
 #include "SyslinkComponentController.h"
@@ -565,6 +566,7 @@ void QGCApplication::_initCommon()
     qmlRegisterType<XGimbalTcpController>           ("XUI",                                  1, 0, "XGimbalTcpController");
     qmlRegisterType<XAlgorithmTcpController>("XUI", 1, 0, "XAlgorithmTcpController");
     qmlRegisterType<XBoardRecordingController>("XUI", 1, 0, "XBoardRecordingController");
+    qmlRegisterType<XBoardMaintenanceController>("XUI", 1, 0, "XBoardMaintenanceController");
     qmlRegisterType<XScriptTcpController>           ("XUI",                                  1, 0, "XScriptTcpController");
     // qmlRegisterType<ScreenToolsController>          (kQGCControllers,                       1, 0, "ScreenToolsController");
     qmlRegisterSingletonType<ScreenToolsController>  ("XUI",                                1, 0, "ScreenToolsController",  screenToolsControllerSingletonFactory);

@@ -1,22 +1,13 @@
 # 无人机地面站
 
-当前 Windows 候选运行包：**v1.01.13-activation-code-rc1 — 复制机器码、粘贴激活码**。
+当前开发版本：**v1.01.14-board-maintenance-rc1 — 板卡维护和 SSH 终端**。
 
-**[下载 Windows x64 完整运行包，约 179 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.13-activation-code-rc1/NexusGround-Windows-x64_v1.01.13-activation-code-rc1_20261022.zip)**。
+视频页新增“板卡维护”：打开主控和算法板的独立交互 SSH 终端，算法板默认经主控跳转。
+提供状态/地址、原有 uav-switch 菜单、分路重启、日志、录像连接码等快捷操作。无需互联网安装 SSH，仍需局域网连通。
+详见 [板卡维护说明](project-docs/BOARD_MAINTENANCE.md) 和 [板端录像说明](project-docs/BOARD_RECORDING.md)。
 
-首次运行复制固定的 `NGL1-...` 机器码发给管理员；管理员用新版签发工具生成激活码，客户粘贴并点击“激活”即可。
-不需要申请文件或授权文件。激活成功自动保存，下次打开直接进入；已有激活继续有效。
-运行 `License-Information.cmd` 可查看授权或粘贴续期激活码，详见 [离线授权说明](project-docs/OFFLINE_LICENSING.md)。
-
-[Windows 完整构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39715705915) 与 [Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39715703358) 已通过。
-Windows UTF-8/CP1252 授权和界面各 29 项、签发逻辑 8 项、管理员 GUI 生成/复制流程、正式 EXE 的 10 项中文文字和截图检查通过。
-客户包不含私钥或管理员工具，生产私钥不进入 GitHub/CI。
-完整解压运行包到新目录后运行 `NexusGround.exe`，保留全部 DLL/QML/视频插件，无需安装 Qt、GStreamer 或 Python。
-
-保留 MK22 云台/算法板两套方案、单路高清/多路按需低码率、独立双控制和板端高清录像。
-配套 [v1.4.0 板端程序](https://github.com/Zhanghaohao666/uav-board-deploy/blob/v1.4.0/docs/adaptive-streams.md)，此次不需要修改板端。
-包内 `BUILD_INFO.json` 记录实际源码和验证范围；实际授权电脑视频及室外效果仍需现场验收。
-自动编译见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。
+保留机器码/粘贴激活码、已保存授权、MK22 两套方案、单路高清/多路按需低码率、独立双控制和板端高清录像。
+本次无需更新板端程序；现有管理员签发工具继续适用。Windows 完整运行包正在构建，验收后更新下载链接。
 
 ## 版本导航
 

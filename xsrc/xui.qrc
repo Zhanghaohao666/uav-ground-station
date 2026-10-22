@@ -32,6 +32,7 @@
         <file alias="XUI/XVideoProfiles.js">XUI/XVideoProfiles.js</file>
         <file alias="XUI/XPayloadControlPanel.qml">XUI/XPayloadControlPanel.qml</file>
         <file alias="XUI/XBoardRecordingDialog.qml">XUI/XBoardRecordingDialog.qml</file>
+        <file alias="XUI/XBoardMaintenanceDialog.qml">XUI/XBoardMaintenanceDialog.qml</file>
         <file alias="XUI/XStatusBar.qml">XUI/XStatusBar.qml</file>
         <file alias="XUI/XArtificialHorizon.qml">XUI/Dash/XArtificialHorizon.qml</file>
         <file alias="XUI/XAttitudeWidget.qml">XUI/Dash/XAttitudeWidget.qml</file>

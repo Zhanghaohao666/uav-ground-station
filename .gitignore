@@ -122,3 +122,8 @@ tests/video_receiver_native/target_wrapper.sh
 __pycache__/
 /license-owner/
 /license-private/
+
+# Isolated SSH maintenance tests
+tests/board_maintenance/Makefile*
+tests/board_maintenance/maintenance_tests
+tests/board_maintenance/target_wrapper.sh
