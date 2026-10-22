@@ -74,6 +74,7 @@ $info = [ordered]@{
     board_and_mk22_live_tested = $false
     offline_license_required = $true
     offline_license_algorithm = 'RSA-3072-PSS-SHA256'
+    offline_activation_method = 'machine-code-and-pasted-NGAC1-code'
     activation_gate_startup_verified = $false
     activation_ui_chinese_verified = $false
 }
@@ -85,7 +86,8 @@ Copy-Item -Path @("$source\tools\windows\License-Information.cmd", "$source\tool
 新版地面站 Windows x64 运行包
 
 请解压整个文件夹，关闭旧地面站后运行 NexusGround.exe。
-首次运行会显示离线激活窗口：导出 .ngreq 申请给管理员，收到 .nglic 后导入。
+首次运行显示机器码：复制发给管理员，将收到的激活码粘贴后点击“激活”。
+激活一次自动保存，下次直接进入；不需要交换申请或授权文件。
 可运行 License-Information.cmd 查看授权信息或续期。
 客户运行包不含私钥或管理员签发工具。
 保留所有 DLL、qml、platforms 和 gstreamer-plugins，不能只复制 EXE。

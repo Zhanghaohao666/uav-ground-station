@@ -1,10 +1,13 @@
 import datetime as dt
+import base64
 import importlib.util
 import json
 from pathlib import Path
 import tempfile
 import unittest
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 
 spec = importlib.util.spec_from_file_location("authority", Path(__file__).resolve().parents[2] / "tools/licensing/license_authority.py")
 a = importlib.util.module_from_spec(spec)
@@ -67,6 +70,28 @@ class AuthorityTests(unittest.TestCase):
             request.write_text("x" * 65537)
             with self.assertRaises(ValueError):
                 a.read_request(request)
+
+    def test_copyable_code_preserves_original_signature(self):
+        envelope = a.issue(self.key, self.machine, "测试用户")
+        code = a.activation_code(envelope)
+        prefix, identifier, message, signature = code.split(".")
+        self.assertEqual(prefix, "NGAC1")
+        self.assertEqual(identifier, a.key_id(self.key.public_key()))
+        self.assertTrue(code.isascii())
+        self.assertNotIn("=", code)
+        decode = lambda text: base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
+        self.assertEqual(decode(message), base64.b64decode(envelope["payload"]))
+        self.assertEqual(decode(signature), base64.b64decode(envelope["signature"]))
+        self.key.public_key().verify(decode(signature), decode(message),
+            padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=32), hashes.SHA256())
+        self.assertLess(len(code), 2000)
+
+    def test_code_rejects_incompatible_envelope(self):
+        envelope = a.issue(self.key, self.machine, "customer")
+        for changed in [{"format": "wrong"}, {"algorithm": "none"}, {"key_id": "bad"},
+                        {"signature": "AA=="}, {"payload": "!!!!"}]:
+            with self.assertRaises(ValueError):
+                a.activation_code(dict(envelope, **changed))
 
 
 if __name__ == "__main__":

@@ -1,24 +1,18 @@
 # 无人机地面站
 
-当前 Windows 候选运行包：**v1.01.12-offline-license-rc4 — 修复激活窗口中文乱码**。
+当前开发版本：**v1.01.13-activation-code-rc1 — 复制机器码、粘贴激活码**。
 
-**[下载 Windows x64 完整运行包，约 179 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.12-offline-license-rc4/NexusGround-Windows-x64_v1.01.12-offline-license-rc4_20261022.zip)**。
-完整解压到新目录，关闭旧地面站后运行 `NexusGround.exe`，保留全部 DLL/QML/视频插件，无需安装 Qt、GStreamer 或 Python。
+首次运行复制固定的 `NGL1-...` 机器码发给管理员；管理员用新版签发工具生成激活码，客户粘贴并点击“激活”即可。
+不需要申请文件或授权文件。激活成功自动保存，下次打开直接进入；已有激活继续有效。
+运行 `License-Information.cmd` 可查看授权或粘贴续期激活码，详见 [离线授权说明](project-docs/OFFLINE_LICENSING.md)。
 
-rc2 激活窗口的标题、说明、按钮和提示存在编译乱码，rc4 已修复，无需更改 Windows 区域或语言设置。
-Windows UTF-8/CP1252 两组授权及中文测试各 24 项通过；正式 EXE 的 8 项实际窗口文字比对及截图检查通过。
-**签发密钥、机器码和授权格式不变，原管理员工具及已签发授权继续适用。**
-
-首次运行导出 `.ngreq` 申请给管理员，收到 `.nglic` 后导入即可离线使用，支持永久/限期和电脑绑定。
-以后升级程序目录、切换方案或清理软件设置不主动删除授权。运行 `License-Information.cmd` 可查看授权或续期，详见 [离线授权说明](project-docs/OFFLINE_LICENSING.md)。
-客户 ZIP 不含签发私钥或管理员工具；私钥由拥有者在本地单独保管，不进入 GitHub/CI。旧版公开程序不会自动失效，公开源码可被修改后重新构建。
+Windows 完整包正在构建，构建及验收通过后更新下载链接。客户包不含私钥或管理员工具，生产私钥不进入 GitHub/CI。
+完整解压运行包到新目录后运行 `NexusGround.exe`，保留全部 DLL/QML/视频插件，无需安装 Qt、GStreamer 或 Python。
 
 保留 MK22 云台/算法板两套方案、单路高清/多路按需低码率、独立双控制和板端高清录像。
-需配套 [v1.4.0 板端程序](https://github.com/Zhanghaohao666/uav-board-deploy/blob/v1.4.0/docs/adaptive-streams.md)，此次修改不要求重新部署板端。
-
-Windows 完整编译、CNG 授权、原生 TCP/UDP 解码和视频环境隔离通过；Linux 视频/控制/录像回归通过。
-真实用户电脑的授权后主界面、视频播放和室外无线效果仍需验收，中文窗口检查不代替视频验收。
-包内 `BUILD_INFO.json` 记录实际提交和验证范围；自动编译见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。
+配套 [v1.4.0 板端程序](https://github.com/Zhanghaohao666/uav-board-deploy/blob/v1.4.0/docs/adaptive-streams.md)，此次不需要修改板端。
+包内 `BUILD_INFO.json` 记录实际源码和验证范围；实际授权电脑视频及室外效果仍需现场验收。
+自动编译见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。
 
 ## 版本导航
 

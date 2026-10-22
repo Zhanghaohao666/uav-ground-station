@@ -31,7 +31,30 @@
 namespace NexusLicense {
 namespace {
 constexpr int maxLicenseBytes = 65536;
+constexpr int maxActivationCodeChars = 16384;
 Result failure(const QString& message) { Result r; r.error = message; return r; }
+
+// Text transport only: the exact original payload/signature are reconstructed
+// and verified with the same pinned production key and policy as old licenses.
+QByteArray decodeActivationCode(QString code)
+{
+    if (code.size() > maxActivationCodeChars) return {};
+    code.remove(QRegularExpression(QStringLiteral("[ \\t\\r\\n]")));
+    const auto parts = code.split('.');
+    if (parts.size() != 4 || parts[0] != QStringLiteral("NGAC1")
+        || !QRegularExpression(QStringLiteral("^[a-f0-9]{24}$")).match(parts[1]).hasMatch()) return {};
+    QByteArray decoded[2];
+    for (int i = 0; i < 2; ++i) {
+        if (!QRegularExpression(QStringLiteral("^[A-Za-z0-9_-]+$")).match(parts[i + 2]).hasMatch()) return {};
+        const auto encoded = parts[i + 2].toLatin1();
+        decoded[i] = QByteArray::fromBase64(encoded, QByteArray::Base64UrlEncoding);
+        if (decoded[i].isEmpty() || decoded[i].toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals) != encoded) return {};
+    }
+    if (decoded[1].size() != 384) return {};
+    return QJsonDocument(QJsonObject{{"format", "NGLIC-1"}, {"algorithm", "RSA-PSS-SHA256"},
+        {"key_id", parts[1]}, {"payload", QString::fromLatin1(decoded[0].toBase64())},
+        {"signature", QString::fromLatin1(decoded[1].toBase64())}}).toJson(QJsonDocument::Compact);
+}
 
 bool signatureValid(const QByteArray& message, const QByteArray& signature, const PublicKey& key)
 {
@@ -175,20 +198,20 @@ Result verify(const QByteArray& bytes, const QString& machine, const QDateTime& 
 {
     if (!isMachineCode(machine)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe8\xaf\xbb\xe5\x8f\x96\xe6\x9c\xac\xe6\x9c\xba\xe6\x9c\xba\xe5\x99\xa8\xe7\xa0\x81\xef\xbc\x8c\xe8\xaf\xb7\xe8\x81\x94\xe7\xb3\xbb\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe3\x80\x82"));
     if (!now.isValid()) return failure(QString::fromUtf8("\xe7\xb3\xbb\xe7\xbb\x9f\xe6\x97\xb6\xe9\x97\xb4\xe6\x97\xa0\xe6\x95\x88\xef\xbc\x8c\xe8\xaf\xb7\xe6\xa0\xa1\xe5\x87\x86\xe6\x97\xb6\xe9\x97\xb4\xe3\x80\x82"));
-    if (bytes.isEmpty()) return failure(QString::fromUtf8("\xe5\xb0\x9a\xe6\x9c\xaa\xe6\xbf\x80\xe6\xb4\xbb\xef\xbc\x8c\xe8\xaf\xb7\xe5\xaf\xbc\xe5\x85\xa5\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe7\xad\xbe\xe5\x8f\x91\xe7\x9a\x84\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xe3\x80\x82"));
-    if (bytes.size() > maxLicenseBytes) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xe8\xbf\x87\xe5\xa4\xa7\xe3\x80\x82"));
+    if (bytes.isEmpty()) return failure(QString::fromUtf8("\xe5\xb0\x9a\xe6\x9c\xaa\xe6\xbf\x80\xe6\xb4\xbb\xef\xbc\x8c\xe8\xaf\xb7\xe7\xb2\x98\xe8\xb4\xb4\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe7\xad\xbe\xe5\x8f\x91\xe7\x9a\x84\xe6\xbf\x80\xe6\xb4\xbb\xe7\xa0\x81\xe3\x80\x82"));
+    if (bytes.size() > maxLicenseBytes) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe5\x86\x85\xe5\xae\xb9\xe8\xbf\x87\xe5\xa4\xa7\xe3\x80\x82"));
     QJsonParseError parse;
     const auto doc = QJsonDocument::fromJson(bytes, &parse);
-    if (parse.error != QJsonParseError::NoError || !doc.isObject()) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xe6\xa0\xbc\xe5\xbc\x8f\xe4\xb8\x8d\xe6\xad\xa3\xe7\xa1\xae\xe3\x80\x82"));
+    if (parse.error != QJsonParseError::NoError || !doc.isObject()) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe5\x86\x85\xe5\xae\xb9\xe6\xa0\xbc\xe5\xbc\x8f\xe4\xb8\x8d\xe6\xad\xa3\xe7\xa1\xae\xe3\x80\x82"));
     const auto envelope = doc.object();
     if (envelope.value("format").toString() != QStringLiteral("NGLIC-1")
         || envelope.value("algorithm").toString() != QStringLiteral("RSA-PSS-SHA256")
         || envelope.value("key_id").toString() != key.id)
-        return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xe7\x9a\x84\xe6\xa0\xbc\xe5\xbc\x8f\xe6\x88\x96\xe7\xad\xbe\xe5\x8f\x91\xe5\xaf\x86\xe9\x92\xa5\xe4\xb8\x8d\xe5\x8c\xb9\xe9\x85\x8d\xe3\x80\x82"));
+        return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe5\x86\x85\xe5\xae\xb9\xe7\x9a\x84\xe6\xa0\xbc\xe5\xbc\x8f\xe6\x88\x96\xe7\xad\xbe\xe5\x8f\x91\xe5\xaf\x86\xe9\x92\xa5\xe4\xb8\x8d\xe5\x8c\xb9\xe9\x85\x8d\xe3\x80\x82"));
     const QByteArray payload = strictBase64(envelope.value("payload"));
     const QByteArray signature = strictBase64(envelope.value("signature"));
     if (payload.isEmpty() || !signatureValid(payload, signature, key))
-        return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe7\xad\xbe\xe5\x90\x8d\xe6\x97\xa0\xe6\x95\x88\xef\xbc\x8c\xe6\x96\x87\xe4\xbb\xb6\xe5\x8f\xaf\xe8\x83\xbd\xe5\xb7\xb2\xe8\xa2\xab\xe4\xbf\xae\xe6\x94\xb9\xe6\x88\x96\xe4\xb8\x8d\xe6\x98\xaf\xe7\x94\xb1\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe7\xad\xbe\xe5\x8f\x91\xe3\x80\x82"));
+        return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe7\xad\xbe\xe5\x90\x8d\xe6\x97\xa0\xe6\x95\x88\xef\xbc\x8c\xe5\x86\x85\xe5\xae\xb9\xe5\x8f\xaf\xe8\x83\xbd\xe5\xb7\xb2\xe8\xa2\xab\xe4\xbf\xae\xe6\x94\xb9\xe6\x88\x96\xe4\xb8\x8d\xe6\x98\xaf\xe7\x94\xb1\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe7\xad\xbe\xe5\x8f\x91\xe3\x80\x82"));
     const auto signedDoc = QJsonDocument::fromJson(payload, &parse);
     if (parse.error != QJsonParseError::NoError || !signedDoc.isObject()) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe5\x86\x85\xe5\xae\xb9\xe6\xa0\xbc\xe5\xbc\x8f\xe9\x94\x99\xe8\xaf\xaf\xe3\x80\x82"));
     const auto data = signedDoc.object();
@@ -221,6 +244,13 @@ QString defaultLicensePath()
         + QStringLiteral("/NexusGround/Licensing/license.nglic");
 }
 
+Result verifyActivationCode(const QString& code, const QString& machine, const QDateTime& now, const PublicKey& key)
+{
+    const auto envelope = decodeActivationCode(code);
+    if (envelope.isEmpty()) return failure(QString::fromUtf8("\xe6\xbf\x80\xe6\xb4\xbb\xe7\xa0\x81\xe6\xa0\xbc\xe5\xbc\x8f\xe4\xb8\x8d\xe6\xad\xa3\xe7\xa1\xae\xef\xbc\x8c\xe8\xaf\xb7\xe5\xae\x8c\xe6\x95\xb4\xe7\xb2\x98\xe8\xb4\xb4\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe5\x8f\x91\xe6\x9d\xa5\xe7\x9a\x84\x20\x4e\x47\x41\x43\x31\x2e\x20\xe5\xbc\x80\xe5\xa4\xb4\xe7\x9a\x84\xe6\xbf\x80\xe6\xb4\xbb\xe7\xa0\x81\xe3\x80\x82"));
+    return verify(envelope, machine, now, key);
+}
+
 Store::Store(const QString& path, const QString& machine, const PublicKey& key)
     : _path(path), _machine(machine), _key(key) {}
 
@@ -228,15 +258,26 @@ Result Store::current() const
 {
     QFile file(_path);
     if (!file.exists()) return verify({}, _machine, QDateTime::currentDateTimeUtc(), _key);
-    if (!file.open(QIODevice::ReadOnly)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe8\xaf\xbb\xe5\x8f\x96\xe5\xb7\xb2\xe5\xae\x89\xe8\xa3\x85\xe7\x9a\x84\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xef\xbc\x9a") + file.errorString());
+    if (!file.open(QIODevice::ReadOnly)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe8\xaf\xbb\xe5\x8f\x96\xe5\xb7\xb2\xe5\xae\x89\xe8\xa3\x85\xe7\x9a\x84\xe6\x8e\x88\xe6\x9d\x83\xe5\x86\x85\xe5\xae\xb9\xef\xbc\x9a") + file.errorString());
     return verify(file.read(maxLicenseBytes + 1), _machine, QDateTime::currentDateTimeUtc(), _key);
 }
 
 Result Store::importFile(const QString& source) const
 {
     QFile file(source);
-    if (!file.open(QIODevice::ReadOnly)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe6\x89\x93\xe5\xbc\x80\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xef\xbc\x9a") + file.errorString());
-    const QByteArray bytes = file.read(maxLicenseBytes + 1);
+    if (!file.open(QIODevice::ReadOnly)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe6\x89\x93\xe5\xbc\x80\xe6\x8e\x88\xe6\x9d\x83\xe5\x86\x85\xe5\xae\xb9\xef\xbc\x9a") + file.errorString());
+    return install(file.read(maxLicenseBytes + 1));
+}
+
+Result Store::activateCode(const QString& code) const
+{
+    const auto bytes = decodeActivationCode(code);
+    if (bytes.isEmpty()) return failure(QString::fromUtf8("\xe6\xbf\x80\xe6\xb4\xbb\xe7\xa0\x81\xe6\xa0\xbc\xe5\xbc\x8f\xe4\xb8\x8d\xe6\xad\xa3\xe7\xa1\xae\xef\xbc\x8c\xe8\xaf\xb7\xe5\xae\x8c\xe6\x95\xb4\xe7\xb2\x98\xe8\xb4\xb4\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe5\x8f\x91\xe6\x9d\xa5\xe7\x9a\x84\x20\x4e\x47\x41\x43\x31\x2e\x20\xe5\xbc\x80\xe5\xa4\xb4\xe7\x9a\x84\xe6\xbf\x80\xe6\xb4\xbb\xe7\xa0\x81\xe3\x80\x82"));
+    return install(bytes);
+}
+
+Result Store::install(const QByteArray& bytes) const
+{
     const Result result = verify(bytes, _machine, QDateTime::currentDateTimeUtc(), _key);
     if (!result.valid) return result; // Never replace a good license with an invalid import.
     const QString dir = QFileInfo(_path).absolutePath();

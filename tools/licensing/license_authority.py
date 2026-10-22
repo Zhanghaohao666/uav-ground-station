@@ -117,6 +117,24 @@ def write_license(path, envelope):
         stream.write("\n")
 
 
+def activation_code(envelope):
+    """ASCII copy/paste transport; retain exact signed bytes and production key."""
+    if (not isinstance(envelope, dict) or envelope.get("format") != "NGLIC-1"
+            or envelope.get("algorithm") != "RSA-PSS-SHA256"
+            or not re.fullmatch(r"[a-f0-9]{24}", envelope.get("key_id", ""))):
+        raise ValueError("无效的签名授权内容")
+    parts = ["NGAC1", envelope["key_id"]]
+    for name in ("payload", "signature"):
+        value = base64.b64decode(envelope[name], validate=True)
+        if not value or (name == "signature" and len(value) != 384):
+            raise ValueError("无效的授权签名")
+        parts.append(base64.urlsafe_b64encode(value).decode("ascii").rstrip("="))
+    code = ".".join(parts)
+    if len(code) > 16384:
+        raise ValueError("激活码过长")
+    return code
+
+
 def expiration_date(text):
     if not text.strip():
         return None
@@ -130,59 +148,80 @@ def gui():
     import tkinter as tk
     from tkinter import filedialog, messagebox, ttk
     root = tk.Tk()
-    root.title("NexusGround 管理员授权签发工具")
-    root.geometry("770x360")
+    root.title("NexusGround 管理员激活码签发工具")
+    root.geometry("840x530")
+    root.minsize(750, 480)
+    frame = ttk.Frame(root, padding=15)
+    frame.pack(fill="both", expand=True)
     fields = {}
-    labels = [("key", "管理员私钥"), ("request", "授权申请文件"),
-              ("machine", "机器码（导入申请后自动填入）"), ("customer", "授权对象"),
-              ("expires", "到期日期 YYYY-MM-DD（留空为永久）"), ("password", "私钥密码（未加密则留空）")]
-    request_id = [None]
+    labels = [("machine", "客户机器码"), ("customer", "授权对象"),
+              ("expires", "到期日期（留空为永久）"), ("key", "管理员私钥"),
+              ("password", "私钥密码（未加密则留空）")]
+    ttk.Label(frame, text="粘贴客户发来的 NGL1- 机器码，生成激活码后复制发给对方即可。").grid(
+        row=0, column=0, columnspan=3, pady=(0, 15), sticky="w")
+    for row, (name, label) in enumerate(labels, 1):
+        ttk.Label(frame, text=label).grid(row=row, column=0, padx=(0, 10), pady=8, sticky="w")
+        fields[name] = tk.StringVar()
+        ttk.Entry(frame, textvariable=fields[name], width=60, show="*" if name == "password" else "").grid(
+            row=row, column=1, columnspan=1 if name in ("key", "machine") else 2, sticky="ew")
+    fields["customer"].set("授权用户")
+    def paste_machine():
+        try:
+            fields["machine"].set(root.clipboard_get().strip())
+        except tk.TclError:
+            messagebox.showerror("无法粘贴", "剪贴板中没有文字，请先复制客户的完整机器码。")
+    ttk.Button(frame, text="粘贴机器码", command=paste_machine).grid(row=1, column=2, padx=(8, 0))
     def pick_key():
         path = filedialog.askopenfilename(title="选择管理员私钥", filetypes=[("私钥", "*.pem"), ("所有文件", "*")])
         if path:
             fields["key"].set(path)
-    def pick_request():
-        path = filedialog.askopenfilename(title="选择客户导出的申请", filetypes=[("授权申请", "*.ngreq"), ("所有文件", "*")])
-        if not path:
-            return
-        try:
-            request = read_request(path)
-            fields["request"].set(path)
-            fields["machine"].set(request["machine"])
-            request_id[0] = request["key_id"]
-        except Exception as error:
-            messagebox.showerror("申请导入失败", str(error))
-    for row, (name, label) in enumerate(labels):
-        ttk.Label(root, text=label).grid(row=row, column=0, padx=10, pady=9, sticky="w")
-        fields[name] = tk.StringVar()
-        ttk.Entry(root, textvariable=fields[name], width=53, show="*" if name == "password" else "").grid(row=row, column=1, sticky="ew")
-    ttk.Button(root, text="选择", command=pick_key).grid(row=0, column=2, padx=8)
-    ttk.Button(root, text="导入", command=pick_request).grid(row=1, column=2, padx=8)
-    root.columnconfigure(1, weight=1)
+    ttk.Button(frame, text="选择", command=pick_key).grid(row=4, column=2, padx=(8, 0))
+    frame.columnconfigure(1, weight=1)
+    frame.rowconfigure(8, weight=1)
     default_key = Path(sys.executable if getattr(sys, "frozen", False) else __file__).resolve().parent / "owner-key.private.pem"
     if default_key.exists():
         fields["key"].set(str(default_key))
+    status = tk.StringVar(value="激活码只适用于对应电脑；到期日期格式为 YYYY-MM-DD。")
+    ttk.Label(frame, textvariable=status, wraplength=780).grid(row=6, column=0, columnspan=3, sticky="w", pady=10)
+    ttk.Label(frame, text="生成的激活码（完整复制发给客户）").grid(row=7, column=0, columnspan=3, sticky="w")
+    output = tk.Text(frame, height=7, wrap="char", state="disabled")
+    output.grid(row=8, column=0, columnspan=3, sticky="nsew", pady=8)
+    current_code = [""]
+    def set_output(code):
+        current_code[0] = code
+        output.configure(state="normal")
+        output.delete("1.0", "end")
+        output.insert("1.0", code)
+        output.configure(state="disabled")
+        copy_button.configure(state="normal" if code else "disabled")
+    def changed(*_):
+        set_output("")
+        status.set("参数已改变，请重新生成激活码。")
     def sign():
+        set_output("")
         try:
             password = fields["password"].get().encode("utf-8") or None
             key = load_key(fields["key"].get(), password)
-            bound_id = request_id[0]
-            if fields["request"].get():
-                request = read_request(fields["request"].get())
-                if request["machine"] != fields["machine"].get().strip().upper():
-                    raise ValueError("机器码与申请文件不一致")
-                bound_id = request["key_id"]
             envelope = issue(key, fields["machine"].get(), fields["customer"].get(),
-                             expiration_date(fields["expires"].get()), request_key_id=bound_id)
-            path = filedialog.asksaveasfilename(title="保存授权文件", defaultextension=".nglic",
-                                               initialfile="NexusGround.nglic", filetypes=[("授权文件", "*.nglic")])
-            if path:
-                write_license(path, envelope)
-                messagebox.showinfo("签发成功", "将生成的 .nglic 文件发给客户即可。不要发送私钥。")
+                             expiration_date(fields["expires"].get()))
+            set_output(activation_code(envelope))
+            status.set("激活码已生成，点击“复制激活码”后发给客户。")
         except Exception as error:
+            status.set("签发失败，请检查输入。")
             messagebox.showerror("签发失败", str(error))
-    ttk.Button(root, text="生成授权文件", command=sign).grid(row=6, column=1, pady=15)
-    ttk.Label(root, text="仅供管理员使用。私钥和本工具应单独保管，不能随客户运行包分发。").grid(row=7, column=0, columnspan=3, padx=10)
+    def copy_code():
+        if current_code[0]:
+            root.clipboard_clear()
+            root.clipboard_append(current_code[0])
+            status.set("激活码已复制，只把这段激活码发给客户即可。")
+    buttons = ttk.Frame(frame)
+    buttons.grid(row=9, column=0, columnspan=3, pady=8)
+    ttk.Button(buttons, text="生成激活码", command=sign).pack(side="left", padx=8)
+    copy_button = ttk.Button(buttons, text="复制激活码", command=copy_code, state="disabled")
+    copy_button.pack(side="left", padx=8)
+    for variable in fields.values():
+        variable.trace_add("write", changed)
+    ttk.Label(frame, text="仅供管理员使用，不能把本工具和私钥发给客户。").grid(row=10, column=0, columnspan=3, pady=(8, 0), sticky="w")
     root.mainloop()
 
 
@@ -204,7 +243,9 @@ def main():
     source.add_argument("--machine")
     sign.add_argument("--customer", required=True)
     sign.add_argument("--expires", default="", help="中国时区日期，含当天；不填为永久")
-    sign.add_argument("--out", required=True)
+    output = sign.add_mutually_exclusive_group(required=True)
+    output.add_argument("--out", help="兼容旧版：保存授权文件")
+    output.add_argument("--code", action="store_true", help="直接输出可粘贴激活码，无需交换文件")
     sign.add_argument("--ask-password", action="store_true")
     sub.add_parser("gui")
     args = parser.parse_args()
@@ -225,8 +266,11 @@ def main():
             request = read_request(args.request) if args.request else None
             envelope = issue(key, request["machine"] if request else args.machine, args.customer,
                              expiration_date(args.expires), request_key_id=request["key_id"] if request else None)
-            write_license(args.out, envelope)
-            print("授权文件已生成：" + args.out)
+            if args.code:
+                print(activation_code(envelope))
+            else:
+                write_license(args.out, envelope)
+                print("授权文件已生成：" + args.out)
 
 
 if __name__ == "__main__":

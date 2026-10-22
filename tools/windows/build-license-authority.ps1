@@ -5,6 +5,8 @@ $build = Join-Path $env:RUNNER_TEMP 'license-authority-build'
 New-Item -ItemType Directory -Force $output, $build | Out-Null
 & python -m pip install -r "$source/tools/licensing/requirements-build.txt"
 if ($LASTEXITCODE -ne 0) { throw 'Cannot install administrator tool packaging dependencies' }
+& python "$source/tests/licensing/test_authority_gui.py"
+if ($LASTEXITCODE -ne 0) { throw 'Administrator GUI activation code workflow failed' }
 & python -m PyInstaller --noconfirm --clean --onefile --windowed --name NexusLicenseAuthority `
     --distpath $output --workpath "$build/work" --specpath $build `
     "$source/tools/licensing/license_authority.py"

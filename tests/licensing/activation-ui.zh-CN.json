@@ -1,10 +1,12 @@
 {
   "windowTitle": "NexusGround — 离线授权激活",
-  "licenseInstructions": "请将本机机器码或授权申请文件发给管理员，收到授权文件后点击“导入授权”。\n授权完成后可离线使用，无需连接互联网。",
-  "licenseStatus": "尚未激活，请导入管理员签发的授权文件。",
+  "licenseInstructions": "复制本机机器码发给管理员，收到激活码后粘贴到下方并点击“激活”。\n只需激活一次，下次打开直接进入地面站，无需联网。",
+  "machineCodeLabel": "本机机器码",
+  "activationCodeLabel": "激活码",
+  "licenseStatus": "尚未激活，请粘贴管理员签发的激活码。",
   "copyMachineCode": "复制机器码",
-  "exportLicenseRequest": "导出授权申请",
-  "importLicense": "导入授权",
+  "activateLicense": "激活",
   "cancelActivation": "退出",
-  "enterGroundStation": "进入地面站"
+  "enterGroundStation": "进入地面站",
+  "activationCodePlaceholder": "将管理员发来的完整激活码粘贴到这里（NGAC1. 开头）"
 }

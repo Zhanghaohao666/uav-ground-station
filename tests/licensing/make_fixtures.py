@@ -51,6 +51,8 @@ def generate(output):
     variant("future", lambda p: p.update(not_before=authority.stamp(now + dt.timedelta(days=1))))
     variant("expired", lambda p: p.update(issued_at=authority.stamp(now - dt.timedelta(days=10)),
         not_before=authority.stamp(now - dt.timedelta(days=10)), expires_at=authority.stamp(now - dt.timedelta(days=1))))
+    result["codes"] = {name: authority.activation_code(value) for name, value in result.items()
+                       if isinstance(value, dict) and value.get("format") == "NGLIC-1"}
     Path(output).write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
 
 

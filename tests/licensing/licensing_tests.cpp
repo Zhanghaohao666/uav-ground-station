@@ -143,6 +143,72 @@ private slots:
         settings.clear();
         QCOMPARE(machineCode(), code);
     }
+    void activationCodeRoundTripAndWhitespace() {
+        const auto code = fixtures.value("codes").toObject().value("valid").toString();
+        const auto result = verifyActivationCode(code, machine, now, key);
+        QVERIFY2(result.valid, qPrintable(result.error));
+        QString wrapped;
+        for (int i = 0; i < code.size(); i += 73) wrapped += " \t" + code.mid(i, 73) + "\r\n";
+        QVERIFY(verifyActivationCode(wrapped, machine, now, key).valid);
+        QVERIFY(verifyActivationCode(fixtures.value("codes").toObject().value("permanent").toString(), machine, now.addYears(20), key).valid);
+        QVERIFY(!verifyActivationCode(code, "NGL1" + QString("-12345678").repeated(8), now, key).valid);
+        QVERIFY(!verifyActivationCode(code, machine, now).valid);
+    }
+    void codeRetainsAllSignedPolicyChecks() {
+        const auto codes = fixtures.value("codes").toObject();
+        for (const auto& name : {"wrong_product", "wrong_machine", "no_feature", "wrong_schema",
+                                "bad_date", "no_expiry", "blank_customer", "future", "expired", "foreign"})
+            QVERIFY2(!verifyActivationCode(codes.value(name).toString(), machine, now, key).valid, name);
+    }
+    void malformedAndTamperedActivationCode() {
+        const auto code = fixtures.value("codes").toObject().value("valid").toString();
+        for (const auto& bad : {QString(), QString("bad"), code + "=", code + ".extra",
+             code.left(code.size() - 5), QString(16385, 'x'), code + QChar(0x200b), code + QChar(0x00a0)})
+            QVERIFY(!verifyActivationCode(bad, machine, now, key).valid);
+        auto parts = code.split('.');
+        parts[2][10] = parts[2][10] == QChar('A') ? QChar('B') : QChar('A');
+        QVERIFY(!verifyActivationCode(parts.join('.'), machine, now, key).valid);
+        parts = code.split('.');
+        parts[3][5] = parts[3][5] == QChar('A') ? QChar('B') : QChar('A');
+        QVERIFY(!verifyActivationCode(parts.join('.'), machine, now, key).valid);
+    }
+    void pastedActivationPersistsAndProtectsOldLicense() {
+        QTemporaryDir temp;
+        const auto path = temp.path() + "/license.nglic";
+        const auto codes = fixtures.value("codes").toObject();
+        Store store(path, machine, key);
+        QVERIFY(store.activateCode(codes.value("valid").toString()).valid);
+        QVERIFY(Store(path, machine, key).current().valid); // Next process/startup uses this same store.
+        const auto serial = store.current().serial;
+        for (const auto& bad : {codes.value("wrong_machine").toString(), codes.value("expired").toString(), QString("bad")}) {
+            QVERIFY(!store.activateCode(bad).valid);
+            QCOMPARE(store.current().serial, serial);
+        }
+        const auto parent = save(temp.path() + "/regular-file", "sentinel");
+        QVERIFY(!Store(parent + "/license.nglic", machine, key).activateCode(codes.value("valid").toString()).valid);
+    }
+    void pasteDialogActivatesWithoutAnyFilePicker() {
+        QTemporaryDir temp;
+        const auto path = temp.path() + "/license.nglic";
+        ActivationDialog dialog(Store(path, machine, key));
+        auto* input = dialog.findChild<QPlainTextEdit*>("activationCode");
+        auto* activate = dialog.findChild<QPushButton*>("activateLicense");
+        QVERIFY(input);
+        QVERIFY(!activate->isEnabled());
+        QVERIFY(!dialog.findChild<QPushButton*>("importLicense"));
+        QVERIFY(!dialog.findChild<QPushButton*>("exportLicenseRequest"));
+        dialog.findChild<QPushButton*>("copyMachineCode")->click();
+        QCOMPARE(QApplication::clipboard()->text(), machine);
+        input->setPlainText("bad");
+        activate->click();
+        QCOMPARE(dialog.result(), int(QDialog::Rejected));
+        QVERIFY(!dialog.findChild<QPushButton*>("enterGroundStation")->isEnabled());
+        QVERIFY(!dialog.findChild<QLabel*>("licenseStatus")->text().isEmpty());
+        input->setPlainText(fixtures.value("codes").toObject().value("valid").toString());
+        activate->click();
+        QCOMPARE(dialog.result(), int(QDialog::Accepted));
+        QVERIFY(Store(path, machine, key).current().valid);
+    }
     void actualDialogTextMatchesUnicodeGolden() {
         QTemporaryDir temp;
         ActivationDialog dialog(Store(temp.path() + "/license.nglic", machine, key));

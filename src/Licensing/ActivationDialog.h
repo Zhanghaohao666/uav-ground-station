@@ -4,6 +4,7 @@
 
 class QLabel;
 class QPushButton;
+class QPlainTextEdit;
 namespace NexusLicense {
 class ActivationDialog : public QDialog {
     Q_OBJECT
@@ -15,6 +16,7 @@ private:
     Store _store;
     QLabel* _status;
     QPushButton* _enter;
+    QPlainTextEdit* _activationCode;
 };
 
 bool ensureActivated();
