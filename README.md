@@ -1,28 +1,31 @@
 # 无人机地面站
 
-**中文修复候选：v1.01.12-offline-license-rc4。** rc2 已确认存在激活窗口中文乱码，新包会校验正式 EXE 的真实中文控件文本；成功构建后在对应 Release 提供下载。签发密钥和机器码保持不变。
+当前 Windows 候选运行包：**v1.01.12-offline-license-rc4 — 修复激活窗口中文乱码**。
 
-当前 Windows 候选运行包：**v1.01.12-offline-license-rc2 — 离线机器码授权＋按需高低清视频**。
-
-**[下载 Windows x64 完整运行包，约 179 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.12-offline-license-rc2/NexusGround-Windows-x64_v1.01.12-offline-license-rc2_20261022.zip)**。
+**[下载 Windows x64 完整运行包，约 179 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.12-offline-license-rc4/NexusGround-Windows-x64_v1.01.12-offline-license-rc4_20261022.zip)**。
 完整解压到新目录，关闭旧地面站后运行 `NexusGround.exe`，保留全部 DLL/QML/视频插件，无需安装 Qt、GStreamer 或 Python。
 
-首次运行会要求激活：导出 `.ngreq` 申请给管理员，收到签发的 `.nglic` 后导入即可离线使用，支持永久/限期和电脑绑定。
+rc2 激活窗口的标题、说明、按钮和提示存在编译乱码，rc4 已修复，无需更改 Windows 区域或语言设置。
+Windows UTF-8/CP1252 两组授权及中文测试各 24 项通过；正式 EXE 的 8 项实际窗口文字比对及截图检查通过。
+**签发密钥、机器码和授权格式不变，原管理员工具及已签发授权继续适用。**
+
+首次运行导出 `.ngreq` 申请给管理员，收到 `.nglic` 后导入即可离线使用，支持永久/限期和电脑绑定。
 以后升级程序目录、切换方案或清理软件设置不主动删除授权。运行 `License-Information.cmd` 可查看授权或续期，详见 [离线授权说明](project-docs/OFFLINE_LICENSING.md)。
 客户 ZIP 不含签发私钥或管理员工具；私钥由拥有者在本地单独保管，不进入 GitHub/CI。旧版公开程序不会自动失效，公开源码可被修改后重新构建。
 
-基于 v1.01.11-adaptive-rc1，保留 MK22 云台/算法板两套方案、单路高清/多路按需低码率、独立双控制和板端高清录像。
-需配套 [v1.4.0 板端程序](https://github.com/Zhanghaohao666/uav-board-deploy/blob/v1.4.0/docs/adaptive-streams.md)，此次授权修改不要求重新部署板端。
+保留 MK22 云台/算法板两套方案、单路高清/多路按需低码率、独立双控制和板端高清录像。
+需配套 [v1.4.0 板端程序](https://github.com/Zhanghaohao666/uav-board-deploy/blob/v1.4.0/docs/adaptive-streams.md)，此次修改不要求重新部署板端。
 
-Windows 完整编译、CNG 授权测试、生产 EXE 未授权激活窗口、原生 TCP/UDP 解码及视频环境隔离通过；Linux 视频/控制/录像回归通过。
-**真实用户电脑的授权后主界面、视频播放和室外无线效果仍需验收**，不能把原生解码当作 GUI 播放验收。
-包内 `BUILD_INFO.json` 记录实际提交和验证范围；操作及自动编译见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。
+Windows 完整编译、CNG 授权、原生 TCP/UDP 解码和视频环境隔离通过；Linux 视频/控制/录像回归通过。
+真实用户电脑的授权后主界面、视频播放和室外无线效果仍需验收，中文窗口检查不代替视频验收。
+包内 `BUILD_INFO.json` 记录实际提交和验证范围；自动编译见 [Windows 自动编译与下载](project-docs/WINDOWS_AUTO_BUILD.md)。
 
 ## 版本导航
 
 | 标签 | 日期 | 主要内容 |
 |---|---|---|
-| [v1.01.12-offline-license-rc2](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.12-offline-license-rc2) | 2026-10-22 | 离线机器码授权及独立签发工具 |
+| [v1.01.12-offline-license-rc4](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.12-offline-license-rc4) | 2026-10-22 | 激活中文修复、双代码页和正式窗口文字检查 |
+| [v1.01.12-offline-license-rc2](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.12-offline-license-rc2) | 2026-10-22 | 离线机器码授权及独立签发工具（窗口乱码，请用 rc4） |
 | [v1.01.11-adaptive-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.11-adaptive-rc1) | 2026-10-21 | 单路高清、多路按需低码率 |
 | [v1.01.09-base](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-base) | 2026-09-28 | 原始五路地面站 |
 | [v1.01.09-mk22-ir](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.09-mk22-ir) | 2026-09-29 | 算法板红外默认地址 |

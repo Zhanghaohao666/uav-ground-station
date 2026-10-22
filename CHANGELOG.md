@@ -10,7 +10,10 @@
 - 正式 EXE 启动时逐项核对真实窗口文本，并保存窗口截图；中文不匹配时打包检查失败。
 - 签发密钥、公钥、机器码算法、已有授权格式及视频/控制/录像逻辑保持原样；原管理员工具继续适用。
 
-新版运行包以成功的 Windows 构建及 Release 为准；用户电脑实际播放仍需验收。
+验证：[Windows 完整构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39712617247) 与
+[Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39712614176) 通过。
+Windows UTF-8/CP1252 各 24 项测试、正式 EXE 的 8 项中文文本比对和截图检查通过；最终包 EXE 的正确 UTF-8 文本和私钥排除也通过检查。
+用户电脑实际播放仍需验收。
 
 
 ## v1.01.12-offline-license-rc2 — 离线机器码授权
