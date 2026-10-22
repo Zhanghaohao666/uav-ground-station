@@ -1,5 +1,7 @@
 # 无人机地面站
 
+**中文修复候选：v1.01.12-offline-license-rc3。** rc2 已确认存在激活窗口中文乱码，新包会校验正式 EXE 的真实中文控件文本；成功构建后在对应 Release 提供下载。签发密钥和机器码保持不变。
+
 当前 Windows 候选运行包：**v1.01.12-offline-license-rc2 — 离线机器码授权＋按需高低清视频**。
 
 **[下载 Windows x64 完整运行包，约 179 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.12-offline-license-rc2/NexusGround-Windows-x64_v1.01.12-offline-license-rc2_20261022.zip)**。

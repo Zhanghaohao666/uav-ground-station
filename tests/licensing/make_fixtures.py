@@ -26,6 +26,7 @@ def generate(output):
     public = key.public_key()
     numbers = public.public_numbers()
     result = {
+        "ui_golden": json.loads((Path(__file__).parent / "activation-ui.zh-CN.json").read_text(encoding="utf-8")),
         "machine": machine, "now": authority.stamp(now),
         "key": {"modulus": numbers.n.to_bytes(384, "big").hex(), "exponent": "010001",
                 "pem": public.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo).decode(),

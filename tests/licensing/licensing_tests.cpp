@@ -41,7 +41,7 @@ private slots:
         const auto result = verify(bytes("valid"), machine, now, key);
         QVERIFY2(result.valid, qPrintable(result.error));
         QVERIFY(result.expires.isValid());
-        QCOMPARE(result.customer, QString::fromUtf8("测试用户 <script> & 张三"));
+        QCOMPARE(result.customer, QStringLiteral("\u6d4b\u8bd5\u7528\u6237 <script> & \u5f20\u4e09"));
         const auto permanent = verify(bytes("permanent"), machine, now.addYears(20), key);
         QVERIFY(permanent.valid);
         QVERIFY(!permanent.expires.isValid());
@@ -96,7 +96,7 @@ private slots:
         QTemporaryDir temp;
         QVERIFY(temp.isValid());
         const auto license = save(temp.path() + "/source.nglic", bytes("valid"));
-        const auto path = temp.path() + QString::fromUtf8("/授权目录/license.nglic");
+        const auto path = temp.path() + QStringLiteral("/\u6388\u6743\u76ee\u5f55/license.nglic");
         Store store(path, machine, key);
         QVERIFY(!store.current().valid);
         QVERIFY2(store.importFile(license).valid, qPrintable(store.importFile(license).error));
@@ -142,6 +142,15 @@ private slots:
         settings.setValue("activated", true);
         settings.clear();
         QCOMPARE(machineCode(), code);
+    }
+    void actualDialogTextMatchesUnicodeGolden() {
+        QTemporaryDir temp;
+        ActivationDialog dialog(Store(temp.path() + "/license.nglic", machine, key));
+        const auto expected = fixtures.value("ui_golden").toObject();
+        const auto actual = dialog.diagnosticTexts();
+        QCOMPARE(actual.size(), expected.size());
+        for (const auto& name : expected.keys())
+            QCOMPARE(actual.value(name).toString(), expected.value(name).toString());
     }
     void dialogBlocksEnterWithoutLicenseAndAllowsCancel() {
         QTemporaryDir temp;

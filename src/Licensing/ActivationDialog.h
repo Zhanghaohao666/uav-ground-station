@@ -9,6 +9,7 @@ class ActivationDialog : public QDialog {
     Q_OBJECT
 public:
     explicit ActivationDialog(const Store& store, QWidget* parent = nullptr);
+    QJsonObject diagnosticTexts() const;
 private:
     void refresh(const Result& result);
     Store _store;

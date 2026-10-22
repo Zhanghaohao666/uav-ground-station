@@ -75,6 +75,7 @@ $info = [ordered]@{
     offline_license_required = $true
     offline_license_algorithm = 'RSA-3072-PSS-SHA256'
     activation_gate_startup_verified = $false
+    activation_ui_chinese_verified = $false
 }
 $info | ConvertTo-Json | Set-Content "$package\BUILD_INFO.json" -Encoding utf8
 Copy-Item -Path @("$source\COPYING.md", "$source\CHANGELOG.md") -Destination $package
@@ -116,6 +117,7 @@ $process = Start-Process $exe -WorkingDirectory $package -ArgumentList '--log-ou
     -RedirectStandardOutput "$build\startup-stdout.log" -RedirectStandardError "$build\startup-stderr.log" -PassThru
 $guiStartupVerified = $false
 $activationGateVerified = $false
+$activationChineseVerified = $false
 $guiStartupFailure = $null
 try {
     Start-Sleep -Seconds 30
@@ -133,6 +135,19 @@ try {
         throw '未授权的运行包没有正确停留在可见激活窗口，拒绝发布'
     }
     $activationGateVerified = $true
+    $textMatch = [regex]::Match($report, '(?m)^activation_texts_utf8_base64=([^\r\n]+)')
+    if (-not $textMatch.Success) { throw 'Production activation UI text report is missing' }
+    $actualText = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($textMatch.Groups[1].Value)) | ConvertFrom-Json
+    $expectedText = Get-Content "$source/tests/licensing/activation-ui.zh-CN.json" -Raw -Encoding utf8 | ConvertFrom-Json
+    foreach ($property in $expectedText.PSObject.Properties) {
+        if ($actualText.($property.Name) -cne $property.Value) {
+            throw "Production activation Chinese text mismatch: $($property.Name)"
+        }
+    }
+    if ($report -notmatch 'activation_screenshot_saved=true') {
+        throw 'Production activation screenshot was not saved'
+    }
+    $activationChineseVerified = $true
     # The owner private key is never sent to CI. Native disposable-key tests
     # cover successful activation; this exact production EXE must stay locked.
     # Portable video environment/native decoding are tested separately above.
@@ -146,6 +161,7 @@ try {
         Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName "$build\startup-console.log" -Force }
 }
 $info.activation_gate_startup_verified = $activationGateVerified
+$info.activation_ui_chinese_verified = $activationChineseVerified
 $info.gui_startup_verified = $guiStartupVerified
 $info.gui_startup_failure = $guiStartupFailure
 $info.gui_video_frames_verified = $false

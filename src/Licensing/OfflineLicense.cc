@@ -1,3 +1,4 @@
+// Keep translated error literals independent of the compiler source character set.
 #include "OfflineLicense.h"
 #include "LicensePublicKey.h"
 
@@ -172,29 +173,29 @@ QJsonObject activationRequest(const QString& machine)
 
 Result verify(const QByteArray& bytes, const QString& machine, const QDateTime& now, const PublicKey& key)
 {
-    if (!isMachineCode(machine)) return failure(QStringLiteral("无法读取本机机器码，请联系管理员。"));
-    if (!now.isValid()) return failure(QStringLiteral("系统时间无效，请校准时间。"));
-    if (bytes.isEmpty()) return failure(QStringLiteral("尚未激活，请导入管理员签发的授权文件。"));
-    if (bytes.size() > maxLicenseBytes) return failure(QStringLiteral("授权文件过大。"));
+    if (!isMachineCode(machine)) return failure(QStringLiteral("\u65e0\u6cd5\u8bfb\u53d6\u672c\u673a\u673a\u5668\u7801\uff0c\u8bf7\u8054\u7cfb\u7ba1\u7406\u5458\u3002"));
+    if (!now.isValid()) return failure(QStringLiteral("\u7cfb\u7edf\u65f6\u95f4\u65e0\u6548\uff0c\u8bf7\u6821\u51c6\u65f6\u95f4\u3002"));
+    if (bytes.isEmpty()) return failure(QStringLiteral("\u5c1a\u672a\u6fc0\u6d3b\uff0c\u8bf7\u5bfc\u5165\u7ba1\u7406\u5458\u7b7e\u53d1\u7684\u6388\u6743\u6587\u4ef6\u3002"));
+    if (bytes.size() > maxLicenseBytes) return failure(QStringLiteral("\u6388\u6743\u6587\u4ef6\u8fc7\u5927\u3002"));
     QJsonParseError parse;
     const auto doc = QJsonDocument::fromJson(bytes, &parse);
-    if (parse.error != QJsonParseError::NoError || !doc.isObject()) return failure(QStringLiteral("授权文件格式不正确。"));
+    if (parse.error != QJsonParseError::NoError || !doc.isObject()) return failure(QStringLiteral("\u6388\u6743\u6587\u4ef6\u683c\u5f0f\u4e0d\u6b63\u786e\u3002"));
     const auto envelope = doc.object();
     if (envelope.value("format").toString() != QStringLiteral("NGLIC-1")
         || envelope.value("algorithm").toString() != QStringLiteral("RSA-PSS-SHA256")
         || envelope.value("key_id").toString() != key.id)
-        return failure(QStringLiteral("授权文件的格式或签发密钥不匹配。"));
+        return failure(QStringLiteral("\u6388\u6743\u6587\u4ef6\u7684\u683c\u5f0f\u6216\u7b7e\u53d1\u5bc6\u94a5\u4e0d\u5339\u914d\u3002"));
     const QByteArray payload = strictBase64(envelope.value("payload"));
     const QByteArray signature = strictBase64(envelope.value("signature"));
     if (payload.isEmpty() || !signatureValid(payload, signature, key))
-        return failure(QStringLiteral("授权签名无效，文件可能已被修改或不是由管理员签发。"));
+        return failure(QStringLiteral("\u6388\u6743\u7b7e\u540d\u65e0\u6548\uff0c\u6587\u4ef6\u53ef\u80fd\u5df2\u88ab\u4fee\u6539\u6216\u4e0d\u662f\u7531\u7ba1\u7406\u5458\u7b7e\u53d1\u3002"));
     const auto signedDoc = QJsonDocument::fromJson(payload, &parse);
-    if (parse.error != QJsonParseError::NoError || !signedDoc.isObject()) return failure(QStringLiteral("授权内容格式错误。"));
+    if (parse.error != QJsonParseError::NoError || !signedDoc.isObject()) return failure(QStringLiteral("\u6388\u6743\u5185\u5bb9\u683c\u5f0f\u9519\u8bef\u3002"));
     const auto data = signedDoc.object();
     if (data.value("schema") != QJsonValue(1) || data.value("product").toString() != QStringLiteral("NexusGround")
         || data.value("machine").toString() != machine
         || !data.value("features").isArray() || !data.value("features").toArray().contains("ground-station"))
-        return failure(QStringLiteral("此授权不适用于本机或当前产品。"));
+        return failure(QStringLiteral("\u6b64\u6388\u6743\u4e0d\u9002\u7528\u4e8e\u672c\u673a\u6216\u5f53\u524d\u4ea7\u54c1\u3002"));
     const auto issued = timestamp(data.value("issued_at"));
     const auto starts = timestamp(data.value("not_before"));
     const auto expiryValue = data.value("expires_at");
@@ -203,9 +204,9 @@ Result verify(const QByteArray& bytes, const QString& machine, const QDateTime& 
         || expiryValue.isUndefined() || (expiry.isValid() && (expiry <= starts || expiry <= issued))
         || data.value("customer").toString().trimmed().isEmpty()
         || data.value("license_id").toString().trimmed().isEmpty())
-        return failure(QStringLiteral("授权信息不完整或日期无效。"));
-    if (now < starts || now.addSecs(300) < issued) return failure(QStringLiteral("授权尚未生效，请检查系统时间。"));
-    if (expiry.isValid() && now >= expiry) return failure(QStringLiteral("授权已到期，请联系管理员续期。"));
+        return failure(QStringLiteral("\u6388\u6743\u4fe1\u606f\u4e0d\u5b8c\u6574\u6216\u65e5\u671f\u65e0\u6548\u3002"));
+    if (now < starts || now.addSecs(300) < issued) return failure(QStringLiteral("\u6388\u6743\u5c1a\u672a\u751f\u6548\uff0c\u8bf7\u68c0\u67e5\u7cfb\u7edf\u65f6\u95f4\u3002"));
+    if (expiry.isValid() && now >= expiry) return failure(QStringLiteral("\u6388\u6743\u5df2\u5230\u671f\uff0c\u8bf7\u8054\u7cfb\u7ba1\u7406\u5458\u7eed\u671f\u3002"));
     Result result;
     result.valid = true;
     result.customer = data.value("customer").toString();
@@ -227,30 +228,30 @@ Result Store::current() const
 {
     QFile file(_path);
     if (!file.exists()) return verify({}, _machine, QDateTime::currentDateTimeUtc(), _key);
-    if (!file.open(QIODevice::ReadOnly)) return failure(QStringLiteral("无法读取已安装的授权文件：") + file.errorString());
+    if (!file.open(QIODevice::ReadOnly)) return failure(QStringLiteral("\u65e0\u6cd5\u8bfb\u53d6\u5df2\u5b89\u88c5\u7684\u6388\u6743\u6587\u4ef6\uff1a") + file.errorString());
     return verify(file.read(maxLicenseBytes + 1), _machine, QDateTime::currentDateTimeUtc(), _key);
 }
 
 Result Store::importFile(const QString& source) const
 {
     QFile file(source);
-    if (!file.open(QIODevice::ReadOnly)) return failure(QStringLiteral("无法打开授权文件：") + file.errorString());
+    if (!file.open(QIODevice::ReadOnly)) return failure(QStringLiteral("\u65e0\u6cd5\u6253\u5f00\u6388\u6743\u6587\u4ef6\uff1a") + file.errorString());
     const QByteArray bytes = file.read(maxLicenseBytes + 1);
     const Result result = verify(bytes, _machine, QDateTime::currentDateTimeUtc(), _key);
     if (!result.valid) return result; // Never replace a good license with an invalid import.
     const QString dir = QFileInfo(_path).absolutePath();
-    if (!QDir().mkpath(dir)) return failure(QStringLiteral("无法创建授权目录，请检查目录权限。"));
+    if (!QDir().mkpath(dir)) return failure(QStringLiteral("\u65e0\u6cd5\u521b\u5efa\u6388\u6743\u76ee\u5f55\uff0c\u8bf7\u68c0\u67e5\u76ee\u5f55\u6743\u9650\u3002"));
     QSaveFile target(_path);
-    if (!target.open(QIODevice::WriteOnly)) return failure(QStringLiteral("无法保存授权：") + target.errorString());
+    if (!target.open(QIODevice::WriteOnly)) return failure(QStringLiteral("\u65e0\u6cd5\u4fdd\u5b58\u6388\u6743\uff1a") + target.errorString());
     target.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
     if (target.write(bytes) != bytes.size() || !target.commit())
-        return failure(QStringLiteral("授权保存失败：") + target.errorString());
+        return failure(QStringLiteral("\u6388\u6743\u4fdd\u5b58\u5931\u8d25\uff1a") + target.errorString());
     return current();
 }
 
 bool Store::exportRequest(const QString& path, QString* error) const
 {
-    if (!isMachineCode(_machine)) { if (error) *error = QStringLiteral("无法读取机器码。"); return false; }
+    if (!isMachineCode(_machine)) { if (error) *error = QStringLiteral("\u65e0\u6cd5\u8bfb\u53d6\u673a\u5668\u7801\u3002"); return false; }
     QSaveFile file(path);
     const QByteArray bytes = QJsonDocument(activationRequest(_machine)).toJson();
     if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit()) {

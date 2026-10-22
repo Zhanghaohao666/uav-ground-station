@@ -86,6 +86,7 @@ jobs:
           path: |
             ${{ runner.temp }}/gcs-build/*.log
             ${{ runner.temp }}/gcs-build/*.xml
+            ${{ runner.temp }}/gcs-build/*.png
             ${{ runner.temp }}/gcs-build/portable-video/
             ${{ runner.temp }}/gcs-downloads/*.log
           if-no-files-found: ignore
