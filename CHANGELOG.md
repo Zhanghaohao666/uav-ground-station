@@ -12,6 +12,11 @@
 - 取消旧板未完成连接/请求，避免旧状态覆盖新板；不会自动重放开始/停止录像动作。
 - 保留现有激活授权、视频码率策略和板端录像存储位置；本次无需重启或更新板端服务。
 
+[Windows 完整构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39825875098)、[Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39825874692) 和 [最终客户包中文路径验证](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39827876380) 通过。
+Windows 维护/真实 SSH 13 项、录像控制器 11 项、实际面板 3 项，授权双代码页各 29 项通过；中文/空格/单引号目录下的包内客户端和密码助手、直连/ProxyJump 均通过。
+104 与算法板只读验证自动登录及 sudo，录像接口自动读取 7 路和存储信息；未为测试重启服务或开始录像。
+编译提交 `18952302c45554025bdc2a31acb75f77e9fbc948`；用户电脑的 MK22 实际操作仍需现场验收。
+
 
 ## v1.01.14-board-maintenance-rc1 — 离线板卡维护和 SSH 终端
 
