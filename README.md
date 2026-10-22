@@ -1,12 +1,16 @@
 # 无人机地面站
 
-当前开发版本：**v1.01.13-activation-code-rc1 — 复制机器码、粘贴激活码**。
+当前 Windows 候选运行包：**v1.01.13-activation-code-rc1 — 复制机器码、粘贴激活码**。
+
+**[下载 Windows x64 完整运行包，约 179 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.13-activation-code-rc1/NexusGround-Windows-x64_v1.01.13-activation-code-rc1_20261022.zip)**。
 
 首次运行复制固定的 `NGL1-...` 机器码发给管理员；管理员用新版签发工具生成激活码，客户粘贴并点击“激活”即可。
 不需要申请文件或授权文件。激活成功自动保存，下次打开直接进入；已有激活继续有效。
 运行 `License-Information.cmd` 可查看授权或粘贴续期激活码，详见 [离线授权说明](project-docs/OFFLINE_LICENSING.md)。
 
-Windows 完整包正在构建，构建及验收通过后更新下载链接。客户包不含私钥或管理员工具，生产私钥不进入 GitHub/CI。
+[Windows 完整构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39715705915) 与 [Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39715703358) 已通过。
+Windows UTF-8/CP1252 授权和界面各 29 项、签发逻辑 8 项、管理员 GUI 生成/复制流程、正式 EXE 的 10 项中文文字和截图检查通过。
+客户包不含私钥或管理员工具，生产私钥不进入 GitHub/CI。
 完整解压运行包到新目录后运行 `NexusGround.exe`，保留全部 DLL/QML/视频插件，无需安装 Qt、GStreamer 或 Python。
 
 保留 MK22 云台/算法板两套方案、单路高清/多路按需低码率、独立双控制和板端高清录像。
@@ -18,6 +22,7 @@ Windows 完整包正在构建，构建及验收通过后更新下载链接。客
 
 | 标签 | 日期 | 主要内容 |
 |---|---|---|
+| [v1.01.13-activation-code-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.13-activation-code-rc1) | 2026-10-22 | 粘贴激活码、自动保存、管理员生成与复制；兼容旧授权 |
 | [v1.01.12-offline-license-rc4](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.12-offline-license-rc4) | 2026-10-22 | 激活中文修复、双代码页和正式窗口文字检查 |
 | [v1.01.12-offline-license-rc2](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.12-offline-license-rc2) | 2026-10-22 | 离线机器码授权及独立签发工具（窗口乱码，请用 rc4） |
 | [v1.01.11-adaptive-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.11-adaptive-rc1) | 2026-10-21 | 单路高清、多路按需低码率 |

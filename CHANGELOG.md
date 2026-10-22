@@ -10,7 +10,10 @@
 - 拒绝非法、超长、隐藏字符、过期、错误电脑和篡改激活码，失败不覆盖已有好授权；支持正常空格换行。
 - 保留显式 UTF-8 中文修复，双代码页、正式窗口中文及视频环境检查。视频、控制、录像和板端逻辑未改动。
 
-本地签发工具 8 项及 Qt 授权/界面 29 项通过；Windows 完整构建与正式包检查进行中。
+[Windows 完整构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39715705915) 和 [Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39715703358) 通过。
+Windows UTF-8/CP1252 各 29 项、签发工具 8 项、实际管理员 GUI 生成/复制和旧结果清除通过。
+正式 EXE 的 10 项实际中文文字及截图、TCP/UDP 原生视频各 10 帧、环境隔离和 ZIP 完整性通过。
+编译提交 `e43f9cfb3927d9ee146c60e563db64c2929f0b21`，公钥和本地生产私钥未更换；真实用户电脑视频仍需现场验收。
 
 
 ## v1.01.12-offline-license-rc4 — 激活窗口中文显示修复
