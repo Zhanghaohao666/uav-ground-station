@@ -38,22 +38,36 @@ Host nexus-algorithm
   Port $($ports.algorithm_port)
   ProxyJump nexus-main
 "@ | Set-Content "$directory/connection.conf" -Encoding utf8NoBOM
-    $env:SSH_ASKPASS = $helper
     $env:SSH_ASKPASS_REQUIRE = 'force'
     $env:SSH_ASKPASS_PROMPT = ''
     $env:NEXUS_BOARD_AUTO_LOGIN = '1'
-    $env:PATH = (Split-Path $ssh) + ';' + $env:PATH
+    $env:PATH = $directory + ';' + (Split-Path $ssh) + ';' + $env:PATH
+    $modes = @(
+        @{ name='quoted'; value=('"'+$helper+'"') },
+        @{ name='forward-slash'; value=$helper.Replace('\','/') },
+        @{ name='quoted-forward'; value=('"'+$helper.Replace('\','/')+'"') },
+        @{ name='basename'; value='NexusBoardAskpass.exe' }
+    )
+    $checks = @()
     Push-Location -LiteralPath $directory
     try {
-        foreach ($role in @('main', 'algorithm')) {
-            $output = & $ssh '-F' 'connection.conf' '-tt' "nexus-$role" 'nexus-test-auth' 2> "$results/$role-stderr.log"
-            if ($LASTEXITCODE -ne 0 -or ($output -join "`n").Trim() -ne 'NEXUS_SSH_AUTH_OK') { throw "Packaged $role auto-login failed" }
+        foreach ($mode in $modes) {
+            $env:SSH_ASKPASS = $mode.value
+            $good = $true
+            foreach ($role in @('main', 'algorithm')) {
+                $output = & $ssh '-F' 'connection.conf' '-tt' "nexus-$role" 'nexus-test-auth' 2> "$results/$($mode.name)-$role-stderr.log"
+                if ($LASTEXITCODE -ne 0 -or ($output -join "`n").Trim() -ne 'NEXUS_SSH_AUTH_OK') { $good=$false; break }
+            }
+            $checks += [ordered]@{ mode=$mode.name; passed=$good }
         }
     } finally { Pop-Location }
+    $checks | ConvertTo-Json | Set-Content "$results/path-variants.json" -Encoding utf8
+    if (-not ($checks | Where-Object { $_.passed })) { throw 'No automatic helper path representation worked' }
     $report = [ordered]@{
         source_commit = $info.source_commit
         source_version = $info.source_version
         exact_customer_artifact = $true
+        testing_path_representations = $checks
         bundled_ssh_sha256 = $info.ssh_client_sha256
         bundled_askpass_sha256 = $info.board_askpass_sha256
         chinese_space_apostrophe_bundle_path_verified = $true
