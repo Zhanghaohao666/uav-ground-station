@@ -1,0 +1,36 @@
+name: Windows packaged SSH smoke
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Successful Windows package run in this repository'
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  bundled-ssh:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: NexusGround-Windows-x64
+          path: ${{ runner.temp }}/ssh-customer-artifact
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.build_run_id }}
+      - name: Test exact bundled SSH and password helper in Chinese path
+        run: ./tools/windows/test-ssh-bundle.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: Packaged-SSH-smoke-results
+          path: ${{ runner.temp }}/ssh-bundle-results/
+          if-no-files-found: error
