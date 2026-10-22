@@ -41,7 +41,7 @@ private slots:
         const auto result = verify(bytes("valid"), machine, now, key);
         QVERIFY2(result.valid, qPrintable(result.error));
         QVERIFY(result.expires.isValid());
-        QCOMPARE(result.customer, QStringLiteral("\u6d4b\u8bd5\u7528\u6237 <script> & \u5f20\u4e09"));
+        QCOMPARE(result.customer, QString::fromUtf8("\xe6\xb5\x8b\xe8\xaf\x95\xe7\x94\xa8\xe6\x88\xb7\x20\x3c\x73\x63\x72\x69\x70\x74\x3e\x20\x26\x20\xe5\xbc\xa0\xe4\xb8\x89"));
         const auto permanent = verify(bytes("permanent"), machine, now.addYears(20), key);
         QVERIFY(permanent.valid);
         QVERIFY(!permanent.expires.isValid());
@@ -96,7 +96,7 @@ private slots:
         QTemporaryDir temp;
         QVERIFY(temp.isValid());
         const auto license = save(temp.path() + "/source.nglic", bytes("valid"));
-        const auto path = temp.path() + QStringLiteral("/\u6388\u6743\u76ee\u5f55/license.nglic");
+        const auto path = temp.path() + QString::fromUtf8("\x2f\xe6\x8e\x88\xe6\x9d\x83\xe7\x9b\xae\xe5\xbd\x95\x2f\x6c\x69\x63\x65\x6e\x73\x65\x2e\x6e\x67\x6c\x69\x63");
         Store store(path, machine, key);
         QVERIFY(!store.current().valid);
         QVERIFY2(store.importFile(license).valid, qPrintable(store.importFile(license).error));

@@ -1,4 +1,4 @@
-// Keep translated error literals independent of the compiler source character set.
+// Decode explicit UTF-8 bytes instead of relying on Qt 5/MSVC wide-literal conversion.
 #include "OfflineLicense.h"
 #include "LicensePublicKey.h"
 
@@ -173,29 +173,29 @@ QJsonObject activationRequest(const QString& machine)
 
 Result verify(const QByteArray& bytes, const QString& machine, const QDateTime& now, const PublicKey& key)
 {
-    if (!isMachineCode(machine)) return failure(QStringLiteral("\u65e0\u6cd5\u8bfb\u53d6\u672c\u673a\u673a\u5668\u7801\uff0c\u8bf7\u8054\u7cfb\u7ba1\u7406\u5458\u3002"));
-    if (!now.isValid()) return failure(QStringLiteral("\u7cfb\u7edf\u65f6\u95f4\u65e0\u6548\uff0c\u8bf7\u6821\u51c6\u65f6\u95f4\u3002"));
-    if (bytes.isEmpty()) return failure(QStringLiteral("\u5c1a\u672a\u6fc0\u6d3b\uff0c\u8bf7\u5bfc\u5165\u7ba1\u7406\u5458\u7b7e\u53d1\u7684\u6388\u6743\u6587\u4ef6\u3002"));
-    if (bytes.size() > maxLicenseBytes) return failure(QStringLiteral("\u6388\u6743\u6587\u4ef6\u8fc7\u5927\u3002"));
+    if (!isMachineCode(machine)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe8\xaf\xbb\xe5\x8f\x96\xe6\x9c\xac\xe6\x9c\xba\xe6\x9c\xba\xe5\x99\xa8\xe7\xa0\x81\xef\xbc\x8c\xe8\xaf\xb7\xe8\x81\x94\xe7\xb3\xbb\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe3\x80\x82"));
+    if (!now.isValid()) return failure(QString::fromUtf8("\xe7\xb3\xbb\xe7\xbb\x9f\xe6\x97\xb6\xe9\x97\xb4\xe6\x97\xa0\xe6\x95\x88\xef\xbc\x8c\xe8\xaf\xb7\xe6\xa0\xa1\xe5\x87\x86\xe6\x97\xb6\xe9\x97\xb4\xe3\x80\x82"));
+    if (bytes.isEmpty()) return failure(QString::fromUtf8("\xe5\xb0\x9a\xe6\x9c\xaa\xe6\xbf\x80\xe6\xb4\xbb\xef\xbc\x8c\xe8\xaf\xb7\xe5\xaf\xbc\xe5\x85\xa5\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe7\xad\xbe\xe5\x8f\x91\xe7\x9a\x84\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xe3\x80\x82"));
+    if (bytes.size() > maxLicenseBytes) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xe8\xbf\x87\xe5\xa4\xa7\xe3\x80\x82"));
     QJsonParseError parse;
     const auto doc = QJsonDocument::fromJson(bytes, &parse);
-    if (parse.error != QJsonParseError::NoError || !doc.isObject()) return failure(QStringLiteral("\u6388\u6743\u6587\u4ef6\u683c\u5f0f\u4e0d\u6b63\u786e\u3002"));
+    if (parse.error != QJsonParseError::NoError || !doc.isObject()) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xe6\xa0\xbc\xe5\xbc\x8f\xe4\xb8\x8d\xe6\xad\xa3\xe7\xa1\xae\xe3\x80\x82"));
     const auto envelope = doc.object();
     if (envelope.value("format").toString() != QStringLiteral("NGLIC-1")
         || envelope.value("algorithm").toString() != QStringLiteral("RSA-PSS-SHA256")
         || envelope.value("key_id").toString() != key.id)
-        return failure(QStringLiteral("\u6388\u6743\u6587\u4ef6\u7684\u683c\u5f0f\u6216\u7b7e\u53d1\u5bc6\u94a5\u4e0d\u5339\u914d\u3002"));
+        return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xe7\x9a\x84\xe6\xa0\xbc\xe5\xbc\x8f\xe6\x88\x96\xe7\xad\xbe\xe5\x8f\x91\xe5\xaf\x86\xe9\x92\xa5\xe4\xb8\x8d\xe5\x8c\xb9\xe9\x85\x8d\xe3\x80\x82"));
     const QByteArray payload = strictBase64(envelope.value("payload"));
     const QByteArray signature = strictBase64(envelope.value("signature"));
     if (payload.isEmpty() || !signatureValid(payload, signature, key))
-        return failure(QStringLiteral("\u6388\u6743\u7b7e\u540d\u65e0\u6548\uff0c\u6587\u4ef6\u53ef\u80fd\u5df2\u88ab\u4fee\u6539\u6216\u4e0d\u662f\u7531\u7ba1\u7406\u5458\u7b7e\u53d1\u3002"));
+        return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe7\xad\xbe\xe5\x90\x8d\xe6\x97\xa0\xe6\x95\x88\xef\xbc\x8c\xe6\x96\x87\xe4\xbb\xb6\xe5\x8f\xaf\xe8\x83\xbd\xe5\xb7\xb2\xe8\xa2\xab\xe4\xbf\xae\xe6\x94\xb9\xe6\x88\x96\xe4\xb8\x8d\xe6\x98\xaf\xe7\x94\xb1\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe7\xad\xbe\xe5\x8f\x91\xe3\x80\x82"));
     const auto signedDoc = QJsonDocument::fromJson(payload, &parse);
-    if (parse.error != QJsonParseError::NoError || !signedDoc.isObject()) return failure(QStringLiteral("\u6388\u6743\u5185\u5bb9\u683c\u5f0f\u9519\u8bef\u3002"));
+    if (parse.error != QJsonParseError::NoError || !signedDoc.isObject()) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe5\x86\x85\xe5\xae\xb9\xe6\xa0\xbc\xe5\xbc\x8f\xe9\x94\x99\xe8\xaf\xaf\xe3\x80\x82"));
     const auto data = signedDoc.object();
     if (data.value("schema") != QJsonValue(1) || data.value("product").toString() != QStringLiteral("NexusGround")
         || data.value("machine").toString() != machine
         || !data.value("features").isArray() || !data.value("features").toArray().contains("ground-station"))
-        return failure(QStringLiteral("\u6b64\u6388\u6743\u4e0d\u9002\u7528\u4e8e\u672c\u673a\u6216\u5f53\u524d\u4ea7\u54c1\u3002"));
+        return failure(QString::fromUtf8("\xe6\xad\xa4\xe6\x8e\x88\xe6\x9d\x83\xe4\xb8\x8d\xe9\x80\x82\xe7\x94\xa8\xe4\xba\x8e\xe6\x9c\xac\xe6\x9c\xba\xe6\x88\x96\xe5\xbd\x93\xe5\x89\x8d\xe4\xba\xa7\xe5\x93\x81\xe3\x80\x82"));
     const auto issued = timestamp(data.value("issued_at"));
     const auto starts = timestamp(data.value("not_before"));
     const auto expiryValue = data.value("expires_at");
@@ -204,9 +204,9 @@ Result verify(const QByteArray& bytes, const QString& machine, const QDateTime& 
         || expiryValue.isUndefined() || (expiry.isValid() && (expiry <= starts || expiry <= issued))
         || data.value("customer").toString().trimmed().isEmpty()
         || data.value("license_id").toString().trimmed().isEmpty())
-        return failure(QStringLiteral("\u6388\u6743\u4fe1\u606f\u4e0d\u5b8c\u6574\u6216\u65e5\u671f\u65e0\u6548\u3002"));
-    if (now < starts || now.addSecs(300) < issued) return failure(QStringLiteral("\u6388\u6743\u5c1a\u672a\u751f\u6548\uff0c\u8bf7\u68c0\u67e5\u7cfb\u7edf\u65f6\u95f4\u3002"));
-    if (expiry.isValid() && now >= expiry) return failure(QStringLiteral("\u6388\u6743\u5df2\u5230\u671f\uff0c\u8bf7\u8054\u7cfb\u7ba1\u7406\u5458\u7eed\u671f\u3002"));
+        return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe4\xbf\xa1\xe6\x81\xaf\xe4\xb8\x8d\xe5\xae\x8c\xe6\x95\xb4\xe6\x88\x96\xe6\x97\xa5\xe6\x9c\x9f\xe6\x97\xa0\xe6\x95\x88\xe3\x80\x82"));
+    if (now < starts || now.addSecs(300) < issued) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe5\xb0\x9a\xe6\x9c\xaa\xe7\x94\x9f\xe6\x95\x88\xef\xbc\x8c\xe8\xaf\xb7\xe6\xa3\x80\xe6\x9f\xa5\xe7\xb3\xbb\xe7\xbb\x9f\xe6\x97\xb6\xe9\x97\xb4\xe3\x80\x82"));
+    if (expiry.isValid() && now >= expiry) return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe5\xb7\xb2\xe5\x88\xb0\xe6\x9c\x9f\xef\xbc\x8c\xe8\xaf\xb7\xe8\x81\x94\xe7\xb3\xbb\xe7\xae\xa1\xe7\x90\x86\xe5\x91\x98\xe7\xbb\xad\xe6\x9c\x9f\xe3\x80\x82"));
     Result result;
     result.valid = true;
     result.customer = data.value("customer").toString();
@@ -228,30 +228,30 @@ Result Store::current() const
 {
     QFile file(_path);
     if (!file.exists()) return verify({}, _machine, QDateTime::currentDateTimeUtc(), _key);
-    if (!file.open(QIODevice::ReadOnly)) return failure(QStringLiteral("\u65e0\u6cd5\u8bfb\u53d6\u5df2\u5b89\u88c5\u7684\u6388\u6743\u6587\u4ef6\uff1a") + file.errorString());
+    if (!file.open(QIODevice::ReadOnly)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe8\xaf\xbb\xe5\x8f\x96\xe5\xb7\xb2\xe5\xae\x89\xe8\xa3\x85\xe7\x9a\x84\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xef\xbc\x9a") + file.errorString());
     return verify(file.read(maxLicenseBytes + 1), _machine, QDateTime::currentDateTimeUtc(), _key);
 }
 
 Result Store::importFile(const QString& source) const
 {
     QFile file(source);
-    if (!file.open(QIODevice::ReadOnly)) return failure(QStringLiteral("\u65e0\u6cd5\u6253\u5f00\u6388\u6743\u6587\u4ef6\uff1a") + file.errorString());
+    if (!file.open(QIODevice::ReadOnly)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe6\x89\x93\xe5\xbc\x80\xe6\x8e\x88\xe6\x9d\x83\xe6\x96\x87\xe4\xbb\xb6\xef\xbc\x9a") + file.errorString());
     const QByteArray bytes = file.read(maxLicenseBytes + 1);
     const Result result = verify(bytes, _machine, QDateTime::currentDateTimeUtc(), _key);
     if (!result.valid) return result; // Never replace a good license with an invalid import.
     const QString dir = QFileInfo(_path).absolutePath();
-    if (!QDir().mkpath(dir)) return failure(QStringLiteral("\u65e0\u6cd5\u521b\u5efa\u6388\u6743\u76ee\u5f55\uff0c\u8bf7\u68c0\u67e5\u76ee\u5f55\u6743\u9650\u3002"));
+    if (!QDir().mkpath(dir)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe5\x88\x9b\xe5\xbb\xba\xe6\x8e\x88\xe6\x9d\x83\xe7\x9b\xae\xe5\xbd\x95\xef\xbc\x8c\xe8\xaf\xb7\xe6\xa3\x80\xe6\x9f\xa5\xe7\x9b\xae\xe5\xbd\x95\xe6\x9d\x83\xe9\x99\x90\xe3\x80\x82"));
     QSaveFile target(_path);
-    if (!target.open(QIODevice::WriteOnly)) return failure(QStringLiteral("\u65e0\u6cd5\u4fdd\u5b58\u6388\u6743\uff1a") + target.errorString());
+    if (!target.open(QIODevice::WriteOnly)) return failure(QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe4\xbf\x9d\xe5\xad\x98\xe6\x8e\x88\xe6\x9d\x83\xef\xbc\x9a") + target.errorString());
     target.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
     if (target.write(bytes) != bytes.size() || !target.commit())
-        return failure(QStringLiteral("\u6388\u6743\u4fdd\u5b58\u5931\u8d25\uff1a") + target.errorString());
+        return failure(QString::fromUtf8("\xe6\x8e\x88\xe6\x9d\x83\xe4\xbf\x9d\xe5\xad\x98\xe5\xa4\xb1\xe8\xb4\xa5\xef\xbc\x9a") + target.errorString());
     return current();
 }
 
 bool Store::exportRequest(const QString& path, QString* error) const
 {
-    if (!isMachineCode(_machine)) { if (error) *error = QStringLiteral("\u65e0\u6cd5\u8bfb\u53d6\u673a\u5668\u7801\u3002"); return false; }
+    if (!isMachineCode(_machine)) { if (error) *error = QString::fromUtf8("\xe6\x97\xa0\xe6\xb3\x95\xe8\xaf\xbb\xe5\x8f\x96\xe6\x9c\xba\xe5\x99\xa8\xe7\xa0\x81\xe3\x80\x82"); return false; }
     QSaveFile file(path);
     const QByteArray bytes = QJsonDocument(activationRequest(_machine)).toJson();
     if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit()) {
