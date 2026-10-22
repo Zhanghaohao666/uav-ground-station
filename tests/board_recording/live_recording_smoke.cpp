@@ -19,12 +19,11 @@ static QString phase(const XBoardRecordingController& c,const QString& key) {
     return {};
 }
 int main(int argc,char** argv) {
-    QCoreApplication app(argc,argv);if(argc!=3)return 2;
+    QCoreApplication app(argc,argv);if(argc!=2)return 2;
     QTemporaryDir settings;QCoreApplication::setOrganizationName("UavLiveCheck");QCoreApplication::setApplicationName("Recording");
     QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,settings.path());
-    QFile key(argv[2]);if(!key.open(QIODevice::ReadOnly))return 3;
     int result=0;bool started=false;
-    XBoardRecordingController c;if(!c.configure(QString::fromLocal8Bit(argv[1]),QString::fromUtf8(key.readAll()),false) || !wait(c))return 4;
+    XBoardRecordingController c;if(!c.configure(QString::fromLocal8Bit(argv[1])) || !wait(c))return 4;
     if(!c.status().value("session").isNull()) { std::fprintf(stderr,"Existing recording session: no live mutation performed\n");return 77; }
     const QStringList own={"board","preview","infrared"};
     started=true;c.startSelected(own);

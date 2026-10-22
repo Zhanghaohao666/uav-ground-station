@@ -14,7 +14,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2 libunwind-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-good gstreamer1.0-libav libssl-dev python3-pip
       - name: Check offline licensing with disposable keys
         run: |
-          python3 -m pip install -r tools/licensing/requirements.txt
+          python3 -m pip install -r tools/licensing/requirements.txt paramiko==3.5.1
           python3 -m unittest discover -s tests/licensing -p test_authority.py -v
           mkdir -p /tmp/offline-license-tests
           python3 tests/licensing/make_fixtures.py /tmp/offline-license-tests/fixtures.json
@@ -26,6 +26,13 @@ jobs:
         run: qmllint xsrc/XUI/XBoardMaintenanceDialog.qml xsrc/XUI/XUI.qml xsrc/XUI/XBoardRecordingDialog.qml xsrc/XUI/XPayloadControlPanel.qml
       - name: Check SSH maintenance plans and actual QML panel
         run: |
+          mkdir -p /tmp/board-askpass
+          (cd /tmp/board-askpass && qmake "$GITHUB_WORKSPACE/tools/board-askpass/askpass.pro" && make -j2)
+          python3 tests/board_maintenance/ssh_fixture.py --output /tmp/ssh-fixture.json > /tmp/ssh-fixture.log 2>&1 &
+          for attempt in $(seq 1 50); do test -f /tmp/ssh-fixture.json && break; sleep 0.2; done
+          echo "NEXUS_TEST_ASKPASS=/tmp/board-askpass/NexusBoardAskpass" >> "$GITHUB_ENV"
+          echo "NEXUS_SSH_FIXTURE=/tmp/ssh-fixture.json" >> "$GITHUB_ENV"
+          export NEXUS_TEST_ASKPASS=/tmp/board-askpass/NexusBoardAskpass NEXUS_SSH_FIXTURE=/tmp/ssh-fixture.json
           cd tests/board_maintenance
           qmake maintenance.pro
           make -j2
@@ -65,6 +72,7 @@ jobs:
         run: |
           qmake recording.pro
           make -j2
+          cp /tmp/board-askpass/NexusBoardAskpass .
           ./recording_tests
           qmake ui.pro -o Makefile.ui
           make -f Makefile.ui -j2

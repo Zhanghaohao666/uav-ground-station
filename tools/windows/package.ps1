@@ -9,6 +9,7 @@ Get-ChildItem $package -Filter '*.pdb' -Recurse | Remove-Item -Force
 Get-ChildItem $package -Filter '*.ilk' -Recurse | Remove-Item -Force
 New-Item -ItemType Directory -Force "$package/ssh" | Out-Null
 Copy-Item "$env:GCS_SSH_ROOT/*" "$package/ssh" -Force
+Copy-Item $env:GCS_ASKPASS_BIN "$package/NexusBoardAskpass.exe" -Force
 & "$package/ssh/ssh.exe" -V
 if ($LASTEXITCODE -ne 0) { throw 'Bundled SSH client failed standalone startup' }
 $exe = Join-Path $package 'NexusGround.exe'
@@ -77,6 +78,11 @@ $info = [ordered]@{
     customer_pc_direct_exe_playback_verified = $false
     board_and_mk22_live_tested = $false
     ssh_terminal = 'external-interactive-console'
+    board_ssh_login = 'automatic-fixed-dev-profile'
+    board_recording_connection = 'automatic-ssh-bootstrap-no-code-entry'
+    board_ssh_native_direct_and_jump_auth_verified = $true
+    board_recording_native_ssh_bootstrap_verified = $true
+    board_askpass_sha256 = (Get-FileHash "$package/NexusBoardAskpass.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
     ssh_client_version = '10.4.0.0p1-Preview'
     ssh_client_sha256 = (Get-FileHash "$package/ssh/ssh.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
     ssh_client_offline_config_and_qml_tests = $true
@@ -98,11 +104,11 @@ Copy-Item -Path @("$source\tools\windows\License-Information.cmd", "$source\tool
 激活一次自动保存，下次直接进入；不需要交换申请或授权文件。
 可运行 License-Information.cmd 查看授权信息或续期。
 客户运行包不含私钥或管理员签发工具。
-保留所有 DLL、qml、platforms 和 gstreamer-plugins，不能只复制 EXE。
+保留 ssh 文件夹、NexusBoardAskpass.exe、所有 DLL、qml、platforms 和 gstreamer-plugins，不能只复制 EXE。
 视频页可选择“云台方案”或“算法板方案”；载荷控制分别连接 9000/9001。
 新增“板卡维护”：打开主控/算法板 SSH 终端，查看状态和地址、分路重启及打开 uav-switch 菜单。
-SSH 客户端随包提供，无需互联网安装；仍需 MK22/网线/Wi-Fi 局域网连通。密码在终端输入，不保存在软件内。
-板端录像使用独立连接码，可在板卡维护的主控快捷操作中查看；不是激活码或 SSH 密码。
+SSH 客户端随包提供，无需互联网安装；仍需 MK22/网线/Wi-Fi 局域网连通。自动使用固定 dev/dev 登录，快捷命令自动提权；IP 和端口可修改并记住。
+板端录像只需主控 IP，自动连接，不再需要填写录像连接码；选择视频后开始，默认保存在 /data/uav-recordings。
 MK22 默认主控 192.168.2.36；Wi-Fi 调试使用 192.168.1.104。
 版本和源码提交见 BUILD_INFO.json，功能说明见“使用说明”。
 Windows EXE 已内置本包视频插件路径及独立缓存，无需诊断脚本设置环境。

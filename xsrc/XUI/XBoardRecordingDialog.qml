@@ -27,9 +27,7 @@ Dialog {
     header: Label { text: qsTr("板端录像"); color: "white"; font.pixelSize: 22; padding: 16 }
     onOpened: {
         addressField.text = controller.address
-        codeField.text = controller.connectionCode
-        rememberBox.checked = controller.rememberConnection
-        controller.refresh()
+        controller.configure(addressField.text)
     }
     function choose(key, checked) {
         var keys = selectedKeys.slice()
@@ -42,21 +40,17 @@ Dialog {
         spacing: 8
         Label { text: qsTr("视频保存在主控数据盘。关闭窗口或地面站后，录像继续。"); color: "#dde7ef"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
         RowLayout {
-            TextField { id: addressField; objectName: "recordingAddress"; placeholderText: qsTr("主控 IP"); Layout.preferredWidth: 190; enabled: !dialog.working }
-            TextField { id: codeField; objectName: "recordingCode"; placeholderText: qsTr("录像连接码（首次粘贴）"); echoMode: TextInput.Password; Layout.fillWidth: true; enabled: !dialog.working }
-            Button { objectName: "connectRecording"; text: qsTr("连接"); enabled: !dialog.working; onClicked: controller.configure(addressField.text, codeField.text, rememberBox.checked) }
+            TextField { id: addressField; objectName: "recordingAddress"; placeholderText: qsTr("主控 IP"); Layout.fillWidth: true; selectByMouse: true; enabled: !dialog.working }
+            Button { objectName: "connectRecording"; text: qsTr("连接"); enabled: !dialog.working; onClicked: controller.configure(addressField.text) }
         }
         Label {
-            visible: !dialog.linked
-            text: qsTr("这里需要主控的录像连接码，不是软件激活码或 SSH 密码。可通过“板卡维护 → 主控快捷操作 → 查看录像连接码”获取。")
+            text: qsTr("自动使用 dev / dev 连接主控，无需填写连接码。更换板卡后修改 IP 并点击连接，选择视频即可录像。")
             color: "#adbbc8"; wrapMode: Text.WordWrap; Layout.fillWidth: true
         }
-        Button { text: qsTr("打开板卡维护，获取连接码"); visible: !dialog.linked; onClicked: dialog.maintenanceRequested() }
         RowLayout {
-            CheckBox { id: rememberBox; text: qsTr("记住连接"); enabled: !dialog.working }
             BusyIndicator { running: dialog.working; implicitWidth: 24; implicitHeight: 24 }
             Label { text: dialog.working ? qsTr("正在请求主控…") : (dialog.linked ? qsTr("已连接主控") : qsTr("未连接 / 状态未确认")); color: dialog.linked ? "#65d7a1" : "#e0b570"; Layout.fillWidth: true }
-            Button { text: qsTr("刷新"); enabled: !dialog.working; onClicked: controller.refresh() }
+            Button { text: qsTr("刷新"); enabled: !dialog.working; onClicked: controller.configure(addressField.text) }
         }
         Label { objectName: "recordingError"; visible: text.length > 0; text: controller ? controller.errorText : ""; color: "#ffbe85"; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         RowLayout {

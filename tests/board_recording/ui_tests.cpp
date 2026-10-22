@@ -8,6 +8,8 @@
 #include <QTemporaryDir>
 #include "XBoardRecordingController.h"
 #include "fake_board.h"
+#include "test_controller.h"
+#include <cstdio>
 
 class RecordingUiTests : public QObject {
     Q_OBJECT
@@ -16,9 +18,8 @@ private slots:
     void initTestCase() {
         QCoreApplication::setOrganizationName("UavRecorderUiTests");QCoreApplication::setApplicationName("Panel");
         QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,settings.path());
-        qmlRegisterType<XBoardRecordingController>("RecordingTests",1,0,"BoardController");
-        const QString qml=QDir(QCoreApplication::applicationDirPath()).absoluteFilePath("../../xsrc/XUI/XBoardRecordingDialog.qml");
-        qmlRegisterType(QUrl::fromLocalFile(qml),"RecordingTests",1,0,"RecordingDialog");
+        qmlRegisterType<TestRecordingController>("RecordingTests",1,0,"BoardController");
+        qmlRegisterType(QUrl("qrc:/recording/XBoardRecordingDialog.qml"),"RecordingTests",1,0,"RecordingDialog");
     }
     void realDialogChoosesStartsAndClosesWithoutStopping() {
         FakeBoard server;
@@ -46,10 +47,11 @@ ApplicationWindow {
         QVERIFY2(root, qPrintable(component.errorString()));
         auto c=root->findChild<XBoardRecordingController*>("controller");QVERIFY(c);
         auto dialog=root->findChild<QObject*>("dialog");QVERIFY(dialog);
-        QVERIFY(c->configure(server.address(),QString(64,'a'),false));QTRY_VERIFY(c->connected());
+        QVERIFY(c->configure(server.address()));QTRY_VERIFY(c->connected());
         QVERIFY(QMetaObject::invokeMethod(dialog,"open"));QTRY_VERIFY(dialog->property("opened").toBool());
         QTRY_VERIFY(!c->busy());
         const int initialRequests=server.requests.size();
+        QVERIFY(!dialog->findChild<QObject*>("recordingCode"));
         auto start=dialog->findChild<QQuickItem*>("startBoardRecording");QVERIFY(start);QVERIFY(!start->isEnabled());
         QVERIFY(QMetaObject::invokeMethod(dialog,"choose",Q_ARG(QVariant,QString("board")),Q_ARG(QVariant,true)));
         QTRY_VERIFY(start->isEnabled());
@@ -64,5 +66,10 @@ ApplicationWindow {
         QVERIFY(QMetaObject::invokeMethod(dialog,"close"));QTest::qWait(50);QCOMPARE(server.requests.size(),initialRequests+1);
     }
 };
-QTEST_MAIN(RecordingUiTests)
+int main(int argc,char** argv) {
+    if(argc==3 && QByteArray(argv[1])=="--fetch-test-credential") {
+        std::fputs((QByteArray(64,'a')+"\n").constData(),stdout);return 0;
+    }
+    QGuiApplication app(argc,argv);RecordingUiTests test;return QTest::qExec(&test,argc,argv);
+}
 #include "ui_tests.moc"

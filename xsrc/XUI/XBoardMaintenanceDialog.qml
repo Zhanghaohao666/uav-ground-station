@@ -47,7 +47,7 @@ Dialog {
         modal: true
         title: qsTr("确认重启服务")
         standardButtons: Dialog.Ok | Dialog.Cancel
-        Label { width: parent.width; wrapMode: Text.WordWrap; text: qsTr("%1\n对应视频会短暂中断。SSH 连接成功并在终端取得 sudo 权限后执行。").arg(restartPrompt.actionLabel) }
+        Label { width: parent.width; wrapMode: Text.WordWrap; text: qsTr("%1\n对应视频会短暂中断。连接成功后自动取得 sudo 权限并执行。").arg(restartPrompt.actionLabel) }
         onAccepted: dialog.launch(board, actionId)
     }
     contentItem: ColumnLayout {
@@ -66,11 +66,11 @@ Dialog {
             Label { text: qsTr("主控板"); color: "#dde7ef" }
             TextField { id: mainHost; objectName: "maintenanceMainHost"; Layout.fillWidth: true; selectByMouse: true }
             SpinBox { id: mainPort; objectName: "maintenanceMainPort"; from: 1; to: 65535; editable: true }
-            TextField { id: mainUser; objectName: "maintenanceMainUser"; Layout.preferredWidth: 110; selectByMouse: true }
+            TextField { id: mainUser; objectName: "maintenanceMainUser"; readOnly: true; Layout.preferredWidth: 110; selectByMouse: true }
             Label { text: qsTr("算法板"); color: "#dde7ef" }
             TextField { id: algorithmHost; objectName: "maintenanceAlgorithmHost"; Layout.fillWidth: true; selectByMouse: true }
             SpinBox { id: algorithmPort; objectName: "maintenanceAlgorithmPort"; from: 1; to: 65535; editable: true }
-            TextField { id: algorithmUser; objectName: "maintenanceAlgorithmUser"; Layout.preferredWidth: 110; selectByMouse: true }
+            TextField { id: algorithmUser; objectName: "maintenanceAlgorithmUser"; readOnly: true; Layout.preferredWidth: 110; selectByMouse: true }
         }
         CheckBox { id: viaMain; objectName: "maintenanceViaMain"; text: qsTr("算法板经主控 SSH 跳转（推荐，MK22 下无需单独连接算法板网段）") }
         RowLayout {
@@ -80,7 +80,7 @@ Dialog {
             ComboBox { id: targetBox; objectName: "maintenanceTarget"; model: [qsTr("主控快捷操作"), qsTr("算法板快捷操作")]; Layout.preferredWidth: 190 }
         }
         Label {
-            text: qsTr("密码在终端里输入，输入时不显示字符；地面站不保存 SSH 密码。首次连接请确认板卡指纹。跳转连接可能先后询问两块板的密码。")
+            text: qsTr("固定使用 dev / dev 自动登录，快捷命令自动提权。更换板卡时修改 IP 即可；首次连接自动记录指纹，已有指纹变化时停止连接并提示。")
             color: "#adbbc8"; wrapMode: Text.WordWrap; Layout.fillWidth: true
         }
         Label { objectName: "maintenanceStatus"; text: controller ? controller.statusText : ""; visible: text.length > 0; color: "#e0b570"; wrapMode: Text.WordWrap; Layout.fillWidth: true }

@@ -4,14 +4,9 @@
 #include <QVariantList>
 #include <QStringList>
 
-struct BoardSshLaunch {
-    QString program;
-    QStringList arguments;
-    QString title;
-};
+#include "BoardSsh.h"
 
-// Opens a real interactive terminal; passwords and SSH sessions belong to the
-// SSH client, never to QSettings, a command argument, or the video controller.
+// Independent interactive terminals using the fixed dev/dev board profile.
 class XBoardMaintenanceController : public QObject {
     Q_OBJECT
     Q_PROPERTY(QVariantMap configuration READ configuration NOTIFY changed)
@@ -34,6 +29,7 @@ public:
     static QString windowsScript(const BoardSshLaunch& plan);
 protected:
     virtual QString sshProgram() const;
+    virtual QString askpassProgram() const;
     virtual QString stateDirectory() const;
     virtual bool startTerminal(const BoardSshLaunch& plan, QString* error);
 signals:

@@ -9,3 +9,7 @@ HEADERS += ../../xsrc/XModule/XMaintenance/XBoardMaintenanceController.h
 INCLUDEPATH += ../../xsrc/XModule/XMaintenance
 
 RESOURCES += panel.qrc
+
+SOURCES += ../../xsrc/XModule/XMaintenance/BoardSsh.cc
+HEADERS += ../../xsrc/XModule/XMaintenance/BoardSsh.h
+INCLUDEPATH += ../../xsrc/XModule/XMaintenance

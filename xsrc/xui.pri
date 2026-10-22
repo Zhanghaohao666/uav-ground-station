@@ -26,7 +26,8 @@
     $$PWD/XModule/XTCP/XAlgorithmTcpController.h \
     $$PWD/XModule/XTCP/XScriptTcpController.h \
     $$PWD/XModule/XTCP/XBoardRecordingController.h \
-    $$PWD/XModule/XMaintenance/XBoardMaintenanceController.h
+    $$PWD/XModule/XMaintenance/XBoardMaintenanceController.h \
+    $$PWD/XModule/XMaintenance/BoardSsh.h
 
     SOURCES += \
     $$PWD/XSingletons/XScreenToolsController.cc \
@@ -34,5 +35,6 @@
     $$PWD/XModule/XTCP/XGimbalTcpController.cc \
     $$PWD/XModule/XTCP/XScriptTcpController.cc \
     $$PWD/XModule/XTCP/XBoardRecordingController.cc \
-    $$PWD/XModule/XMaintenance/XBoardMaintenanceController.cc
+    $$PWD/XModule/XMaintenance/XBoardMaintenanceController.cc \
+    $$PWD/XModule/XMaintenance/BoardSsh.cc
 }
