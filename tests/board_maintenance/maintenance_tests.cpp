@@ -99,6 +99,8 @@ private slots:
         QVERIFY(remote.contains("sudo systemctl restart uav-front-preview.service"));QVERIFY(remote.contains("exec bash -il"));
         QVERIFY(!remote.contains("uav-front-algorithm"));QVERIFY(!remote.contains("--save-default"));
         QVERIFY(!remote.contains("--password"));
+        QVERIFY(remote.contains("export -f sudo; printf"));
+        QVERIFY(remote.contains("command sudo -S -p"));
     }
     void noClientOrUnwritableStateFailsWithoutLaunch() {
         FakeMaintenance c;QString error;

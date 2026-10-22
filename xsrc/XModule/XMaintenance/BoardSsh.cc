@@ -76,6 +76,6 @@ QProcessEnvironment environment(const BoardSshLaunch& p) {
 // Validate sudo via its password pipe, then execute with the original stdin.
 // The exported function also supports sudo commands typed in the interactive shell.
 QString sudoFunction() {
-    return "sudo() { printf '%s\\n' dev | command sudo -S -p '' -v || return; command sudo \"$@\"; }; export -f sudo; ";
+    return "sudo() { printf '%s\\n' dev | command sudo -S -p '' -v || return; command sudo \"$@\"; }; export -f sudo; printf '%s\\n' dev | command sudo -S -p '' -v; ";
 }
 }

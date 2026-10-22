@@ -1,8 +1,8 @@
 # 无人机地面站
 
-当前 Windows 候选运行包：**v1.01.15-auto-connect-rc1 — 自动连接与直接录像**。
+当前 Windows 候选运行包：**v1.01.15-auto-connect-rc2 — 自动连接与直接录像**。
 
-**[下载 Windows x64 完整运行包，约 181 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.15-auto-connect-rc1/NexusGround-Windows-x64_v1.01.15-auto-connect-rc1_20261023.zip)**。完整解压到新目录后运行 `NexusGround.exe`，保留全部文件及 `ssh` 子目录。
+**[下载 Windows x64 完整运行包，约 181 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.15-auto-connect-rc2/NexusGround-Windows-x64_v1.01.15-auto-connect-rc2_20261023.zip)**。完整解压到新目录后运行 `NexusGround.exe`，保留全部文件及 `ssh` 子目录。
 
 视频页新增“板卡维护”：打开主控和算法板的独立交互 SSH 终端，算法板默认经主控跳转。
 提供状态/地址、原有 uav-switch 菜单、分路重启和日志等快捷操作。v1.01.15 起自动使用 dev/dev 登录，录像只需主控 IP。无需互联网安装 SSH，仍需局域网连通。
@@ -16,7 +16,7 @@
 
 | 标签 | 日期 | 主要内容 |
 |---|---|---|
-| [v1.01.15-auto-connect-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.15-auto-connect-rc1) | 2026-10-23 | dev 自动登录、自动提权、录像无需粘贴连接码 |
+| [v1.01.15-auto-connect-rc2](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.15-auto-connect-rc2) | 2026-10-23 | dev 自动登录、自动提权、录像无需粘贴连接码 |
 | [v1.01.14-board-maintenance-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.14-board-maintenance-rc1) | 2026-10-22 | 离线 SSH 终端、主控跳转、分路恢复及录像连接码提示 |
 | [v1.01.13-activation-code-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.13-activation-code-rc1) | 2026-10-22 | 粘贴激活码、自动保存、管理员生成与复制；兼容旧授权 |
 | [v1.01.12-offline-license-rc4](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.12-offline-license-rc4) | 2026-10-22 | 激活中文修复、双代码页和正式窗口文字检查 |
