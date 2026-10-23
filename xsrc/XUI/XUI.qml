@@ -348,7 +348,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: mainHome._gap
                 XButtonLabel { text: qsTr("板卡维护"); onClicked: boardMaintenanceDialog.open() }
-                XButtonLabel { text: qsTr("板端录像"); onClicked: boardRecordingDialog.open() }
+                XButtonLabel { text: qsTr("数据录制"); onClicked: boardRecordingDialog.open() }
             }
             Row {
                 anchors.verticalCenter: parent.verticalCenter

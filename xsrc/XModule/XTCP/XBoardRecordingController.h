@@ -32,7 +32,9 @@ public:
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void startSelected(const QStringList& keys);
     Q_INVOKABLE void stopSelected(const QStringList& keys);
-    Q_INVOKABLE void stopAll();
+    Q_INVOKABLE void stopAll(); // Stops videos only.
+    Q_INVOKABLE void startLidar();
+    Q_INVOKABLE void stopLidar();
 protected:
     virtual BoardSshLaunch connectionPlan(QString* error) const;
 signals:

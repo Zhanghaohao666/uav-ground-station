@@ -1,25 +1,20 @@
 # 无人机地面站
 
-当前 Windows 候选运行包：**v1.01.15-auto-connect-rc3 — 自动连接与直接录像**。
+当前功能版本：**v1.01.16-lidar-record — E1X 雷达与视频板端录制**。
 
-**[下载 Windows x64 完整运行包，约 181 MiB](https://github.com/Zhanghaohao666/uav-ground-station/releases/download/v1.01.15-auto-connect-rc3/NexusGround-Windows-x64_v1.01.15-auto-connect-rc3_20261023.zip)**。完整解压到新目录后运行 `NexusGround.exe`，保留全部文件、`ssh` 子目录及 `NexusBoardAskpass.exe`。
+Windows 运行包在 [对应 Release](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.16-lidar-record) 提供；编译与验收状态以发布说明为准。完整解压到新目录后运行 `NexusGround.exe`，保留全部文件、`ssh` 子目录及 `NexusBoardAskpass.exe`。原电脑上的有效激活继续使用。
 
-视频页新增“板卡维护”：打开主控和算法板的独立交互 SSH 终端，算法板默认经主控跳转。
-提供状态/地址、原有 uav-switch 菜单、分路重启和日志等快捷操作。v1.01.15 起自动使用 dev/dev 登录，录像只需主控 IP。无需互联网安装 SSH，仍需局域网连通。
-详见 [板卡维护说明](project-docs/BOARD_MAINTENANCE.md) 和 [板端录像说明](project-docs/BOARD_RECORDING.md)。
+视频页打开“数据录制”：自动使用 dev/dev 连接主控，可修改 IP；分别控制视频和 E1X 车载激光雷达的开始、停止。视频保存在 `/data/uav-recordings`，雷达原始点云保存在 `/data/uav-lidar`，关闭地面站后已开始的任务继续运行。停止全部视频不会停止雷达。雷达未连接、数据盘不足或板端功能缺失均提示原因。
 
-保留机器码/粘贴激活码、已保存授权、MK22 两套方案、单路高清/多路按需低码率、独立双控制和板端高清录像。
-本次无需更新板端程序；现有管理员签发工具继续适用。
-[Windows 完整构建](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39825875098)、[Linux 回归](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39825874692) 和 [最终成品包中文路径 SSH 验证](https://github.com/Zhanghaohao666/uav-ground-station/actions/runs/39827876380) 已通过。
-Windows 维护终端 13 项、录像控制器 11 项、实际录像面板 3 项，授权两组各 29 项及原生 TCP/UDP 视频检查均通过。
-真实客户包在中文、空格、单引号目录下的密码助手、主控直连和算法板跳转已验证，界面截图与包内资源已复核。
-104 和算法板已只读验证自动 SSH/sudo，录像状态接口自动列出 7 路。未为测试重启服务或启动录像；用户电脑的 MK22 现场效果仍需验收。
-编译提交 `18952302c45554025bdc2a31acb75f77e9fbc948`。
+雷达录制需要配套新版主控后端、E1X SDK 和 J16 网络配置；不会自动启动雷达采集，也不把原始点云经 MK22 回传。当前雷达未连接，历史样本回放和软件回归不代表本次实时长录已验收。详见 [板端数据录制说明](project-docs/BOARD_RECORDING.md)。
+
+保留 MK22 云台/算法板两套方案、单路高清与多路按需低码率、独立双控制、固定 dev/dev 自动 SSH 和一键服务维护。视频和算法处理程序不因本次地面站录制功能更新而改变；[板卡维护说明](project-docs/BOARD_MAINTENANCE.md)。
 
 ## 版本导航
 
 | 标签 | 日期 | 主要内容 |
 |---|---|---|
+| [v1.01.16-lidar-record](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.16-lidar-record) | 2026-10-23 | E1X 点云板端录制、独立开停、状态/容量/保存目录 |
 | [v1.01.15-auto-connect-rc3](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.15-auto-connect-rc3) | 2026-10-23 | dev 自动登录、自动提权、录像无需粘贴连接码 |
 | [v1.01.14-board-maintenance-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.14-board-maintenance-rc1) | 2026-10-22 | 离线 SSH 终端、主控跳转、分路恢复及录像连接码提示 |
 | [v1.01.13-activation-code-rc1](https://github.com/Zhanghaohao666/uav-ground-station/releases/tag/v1.01.13-activation-code-rc1) | 2026-10-22 | 粘贴激活码、自动保存、管理员生成与复制；兼容旧授权 |

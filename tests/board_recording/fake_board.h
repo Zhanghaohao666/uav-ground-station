@@ -35,5 +35,15 @@ public:
             }
         });
     }
+    void setLidar(const QJsonObject& lidar) {
+        auto object=QJsonDocument::fromJson(response).object();auto status=object["status"].toObject();
+        status["lidar"]=lidar;object["status"]=status;response=QJsonDocument(object).toJson();
+    }
+    static QJsonObject lidarStatus(const QString& phase="idle", bool available=true, bool active=false) {
+        return {{"supported",true},{"phase",phase},{"active",active},{"available",available},
+            {"detail",phase=="starting" ? "Waiting for point cloud data" : ""},{"path","/data/uav-lidar/test"},
+            {"bytes",phase=="recording" ? 12345678 : 0},{"started_at","2026-10-23T13:00:00+08:00"},
+            {"lidar_ip","172.168.1.10"},{"interface","eth1"},{"error",""}};
+    }
     QString address() const { return "127.0.0.1:"+QString::number(serverPort()); }
 };

@@ -59,6 +59,90 @@ private slots:
         FakeBoard server;TestRecordingController c;c.configure(server.address());QTRY_VERIFY(c.connected());
         server.delay=true;c.startSelected({"board"});c.startSelected({"board"});c.stopAll();QTRY_COMPARE(server.requests.size(),2);
     }
+    void lidarUsesIndependentCommandsAndActualDataState() {
+        FakeBoard server;server.setLidar(FakeBoard::lidarStatus());TestRecordingController c;
+        QVERIFY(c.configure(server.address()));QTRY_VERIFY(c.connected());
+        server.setLidar(FakeBoard::lidarStatus("starting",true,true));
+        c.startLidar();QTRY_VERIFY(!c.busy());
+        QVERIFY(server.requests.last().startsWith("POST /v1/lidar/start "));
+        auto body=server.requests.last().mid(server.requests.last().indexOf("\r\n\r\n")+4);
+        QCOMPARE(QJsonDocument::fromJson(body).object(),QJsonObject{});
+        QCOMPARE(c.status().value("lidar").toMap().value("phase").toString(),QString("starting"));
+        const int count=server.requests.size();c.startLidar();QCOMPARE(server.requests.size(),count);
+        server.setLidar(FakeBoard::lidarStatus("recording",true,true));c.refresh();QTRY_VERIFY(!c.busy());
+        QCOMPARE(c.status().value("lidar").toMap().value("phase").toString(),QString("recording"));
+        c.stopAll();QTRY_VERIFY(!c.busy());QVERIFY(server.requests.last().startsWith("POST /v1/stop "));
+        QVERIFY(server.requests.last().contains("[\"all\"]"));
+        QVERIFY(c.status().value("lidar").toMap().value("active").toBool());
+        server.setLidar(FakeBoard::lidarStatus("stopped"));c.stopLidar();QTRY_VERIFY(!c.busy());
+        QVERIFY(server.requests.last().startsWith("POST /v1/lidar/stop "));
+        body=server.requests.last().mid(server.requests.last().indexOf("\r\n\r\n")+4);
+        QCOMPARE(QJsonDocument::fromJson(body).object(),QJsonObject{});
+        QVERIFY(!c.status().value("lidar").toMap().value("active").toBool());
+    }
+    void oldBackendAndOfflineLidarDoNotBreakVideoRecording() {
+        FakeBoard server;TestRecordingController c;c.configure(server.address());QTRY_VERIFY(c.connected());
+        QVERIFY(!c.status().contains("lidar"));
+        c.startLidar();c.stopLidar();QCOMPARE(server.requests.size(),1);
+        c.startSelected({"board"});QTRY_VERIFY(!c.busy());QCOMPARE(server.requests.size(),2);
+        QVERIFY(server.requests.last().startsWith("POST /v1/start "));
+        server.setLidar(FakeBoard::lidarStatus("idle",false));c.refresh();QTRY_VERIFY(!c.busy());
+        const int count=server.requests.size();c.startLidar();QCOMPARE(server.requests.size(),count);
+        server.setLidar(FakeBoard::lidarStatus("starting",false,true));c.refresh();QTRY_VERIFY(!c.busy());
+        c.stopLidar();QTRY_VERIFY(!c.busy());QVERIFY(server.requests.last().startsWith("POST /v1/lidar/stop "));
+    }
+    void malformedLidarStatusCannotClaimRecording_data() {
+        QTest::addColumn<QJsonObject>("lidar");
+        auto lidar=FakeBoard::lidarStatus("recording",true,true);
+        auto bad=lidar;bad["phase"]="unknown";QTest::newRow("unknown-phase")<<bad;
+        bad=lidar;bad["active"]=false;QTest::newRow("recording-not-active")<<bad;
+        bad=lidar;bad["bytes"]=0;QTest::newRow("recording-without-data")<<bad;
+        bad=lidar;bad["bytes"]=-3;QTest::newRow("negative-bytes")<<bad;
+        bad=lidar;bad["available"]="true";QTest::newRow("string-bool")<<bad;
+        bad=lidar;bad.remove("phase");QTest::newRow("missing-phase")<<bad;
+        QTest::newRow("empty-object")<<QJsonObject{};
+    }
+    void malformedLidarStatusCannotClaimRecording() {
+        QFETCH(QJsonObject,lidar);FakeBoard server;server.setLidar(lidar);TestRecordingController c;
+        c.configure(server.address());QTRY_VERIFY(c.connected());
+        QVERIFY(c.status().value("lidar").toMap().value("malformed").toBool());
+        QVERIFY(!c.status().value("lidar").toMap().value("supported").toBool());
+        c.startLidar();c.stopLidar();QCOMPARE(server.requests.size(),1);
+        c.startSelected({"board"});QTRY_VERIFY(!c.busy());QVERIFY(server.requests.last().startsWith("POST /v1/start "));
+    }
+    void delayedLidarCommandTimeoutNeverReplaysAfterReconnect() {
+        FakeBoard server;server.setLidar(FakeBoard::lidarStatus());TestRecordingController c;
+        c.configure(server.address());QTRY_VERIFY(c.connected());
+        server.delay=true;c.startLidar();QTRY_COMPARE(server.requests.size(),2);QVERIFY(c.busy());
+        auto reply=c.findChild<QNetworkReply*>();QVERIFY(reply);
+        auto timeout=reply->findChild<QTimer*>();QVERIFY(timeout);
+        QVERIFY(QMetaObject::invokeMethod(timeout,"timeout"));QTRY_VERIFY(!c.busy());
+        QVERIFY(!c.connected());QVERIFY(c.status().isEmpty());
+        server.delay=false;server.setLidar(FakeBoard::lidarStatus("recording",true,true));c.refresh();
+        QTRY_VERIFY(c.connected());QCOMPARE(server.requests.size(),3);
+        QVERIFY(server.requests.last().startsWith("GET /v1/status "));
+        QCOMPARE(c.status().value("lidar").toMap().value("phase").toString(),QString("recording"));
+    }
+    void malformedGlobalPollClearsStaleLidarAndRecoveryOnlyReadsStatus() {
+        FakeBoard server;server.setLidar(FakeBoard::lidarStatus("recording",true,true));TestRecordingController c;
+        c.configure(server.address());QTRY_VERIFY(c.connected());const auto healthy=server.response;
+        server.response="{\"ok\":true,\"status\":{\"api_version\":1}}";c.refresh();QTRY_VERIFY(!c.busy());
+        QVERIFY(!c.connected());QVERIFY(c.status().isEmpty());
+        server.response=healthy;c.refresh();QTRY_VERIFY(c.connected());
+        QVERIFY(server.requests.last().startsWith("GET /v1/status "));QCOMPARE(server.requests.size(),3);
+    }
+    void changingBoardWhileLidarStartPendingDoesNotReuseState() {
+        FakeBoard first,second;first.setLidar(FakeBoard::lidarStatus());TestRecordingController c;
+        c.configure(first.address());QTRY_VERIFY(c.connected());first.delay=true;c.startLidar();
+        QTRY_COMPARE(first.requests.size(),2);QVERIFY(c.configure(second.address()));QTRY_VERIFY(c.connected());
+        QVERIFY(!c.status().contains("lidar"));QCOMPARE(second.requests.size(),1);
+        QVERIFY(second.requests.first().startsWith("GET /v1/status "));
+    }
+    void closingClientNeverStopsActiveLidar() {
+        FakeBoard server;server.setLidar(FakeBoard::lidarStatus("recording",true,true));
+        { TestRecordingController c;c.configure(server.address());QTRY_VERIFY(c.connected()); }
+        QTest::qWait(30);QCOMPARE(server.requests.size(),1);QVERIFY(server.requests.first().startsWith("GET /v1/status "));
+    }
     void actualAutomaticSshBootstrapAndRecordingHttp() {
         const auto fixture=qEnvironmentVariable("NEXUS_SSH_FIXTURE");if(fixture.isEmpty())QSKIP("Real SSH fixture not enabled");
         QFile file(fixture);QVERIFY(file.open(QIODevice::ReadOnly));const auto ports=QJsonDocument::fromJson(file.readAll()).object();

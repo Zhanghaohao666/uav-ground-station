@@ -7,8 +7,9 @@
 #include <QRegularExpression>
 #include <QSettings>
 #include <QUrl>
+#include <cmath>
 
-XBoardRecordingController::XBoardRecordingController(QObject* parent) : QObject(parent)
+XBoardRecordingController::XBoardRecordingController(QObject* parent) : QObject(parent), _network(this)
 {
     QSettings settings;
     _address = settings.value("BoardRecording/address", _address).toString();
@@ -111,10 +112,52 @@ void XBoardRecordingController::startSelected(const QStringList& keys) { request
 void XBoardRecordingController::stopSelected(const QStringList& keys) { request("stop", keys); }
 void XBoardRecordingController::stopAll() { request("stop", {"all"}); }
 
+// Validate this optional capability independently: older recorders remain usable.
+static QJsonObject checkedLidarStatus(const QJsonValue& value)
+{
+    const auto lidar = value.toObject();
+    const QStringList phases = {"idle", "starting", "recording", "stopping", "stopped", "error"};
+    const bool supported = lidar.value("supported").isBool();
+    if (supported && !lidar.value("supported").toBool()) return lidar;
+    const auto bytes = lidar.value("bytes");
+    const bool valid = supported && lidar.value("phase").isString() &&
+        phases.contains(lidar.value("phase").toString()) && lidar.value("active").isBool() &&
+        lidar.value("available").isBool() && lidar.value("path").isString() &&
+        bytes.isDouble() && std::isfinite(bytes.toDouble()) && bytes.toDouble() >= 0 &&
+        lidar.value("detail").isString() && lidar.value("error").isString() &&
+        (lidar.value("phase").toString() != "recording" || (lidar.value("active").toBool() && bytes.toDouble() > 0));
+    if (valid) return lidar;
+    return QJsonObject{{"supported", false}, {"malformed", true}};
+}
+
+void XBoardRecordingController::startLidar()
+{
+    if (_busy) return;
+    const auto lidar = _status.value("lidar").toMap();
+    if (!_connected || !lidar.value("supported").toBool() || !lidar.value("available").toBool() ||
+        lidar.value("active").toBool() || !QStringList{"idle", "stopped", "error"}.contains(lidar.value("phase").toString())) {
+        _error = QString::fromUtf8("\xe8\xaf\xb7\xe5\x85\x88\xe8\xbf\x9e\xe6\x8e\xa5\xe6\x94\xaf\xe6\x8c\x81\xe9\x9b\xb7\xe8\xbe\xbe\xe5\xbd\x95\xe5\x88\xb6\xe7\x9a\x84\xe4\xb8\xbb\xe6\x8e\xa7\xef\xbc\x8c\xe5\xb9\xb6\xe7\xa1\xae\xe8\xae\xa4\x20\x45\x31\x58\x20\xe5\xb7\xb2\xe8\xbf\x9e\xe6\x8e\xa5\xe3\x80\x81\xe4\xbe\x9b\xe7\x94\xb5\xe4\xb8\x94\xe6\x9c\xaa\xe5\x9c\xa8\xe5\xbd\x95\xe5\x88\xb6\xe3\x80\x82");
+        _operationError = true; emit changed(); return;
+    }
+    request("lidar/start");
+}
+
+void XBoardRecordingController::stopLidar()
+{
+    if (_busy) return;
+    const auto lidar = _status.value("lidar").toMap();
+    if (!_connected || !lidar.value("supported").toBool() || !lidar.value("active").toBool()) {
+        _error = QString::fromUtf8("\xe9\x9b\xb7\xe8\xbe\xbe\xe5\xbd\x95\xe5\x88\xb6\xe7\x8a\xb6\xe6\x80\x81\xe5\xb0\x9a\xe6\x9c\xaa\xe7\xa1\xae\xe8\xae\xa4\xef\xbc\x8c\xe8\xaf\xb7\xe5\x85\x88\xe5\x88\xb7\xe6\x96\xb0\xe4\xb8\xbb\xe6\x8e\xa7\xe7\x8a\xb6\xe6\x80\x81\xe3\x80\x82");
+        _operationError = true; emit changed(); return;
+    }
+    request("lidar/stop");
+}
+
 void XBoardRecordingController::request(const QString& action, const QStringList& keys)
 {
     if (_busy) return;
-    if (_code.isEmpty() || (action != "status" && keys.isEmpty())) {
+    const bool lidarAction = action == "lidar/start" || action == "lidar/stop";
+    if (_code.isEmpty() || (action != "status" && !lidarAction && keys.isEmpty())) {
         _error = QString::fromUtf8("\xe8\xaf\xb7\xe5\x85\x88\xe8\xbf\x9e\xe6\x8e\xa5\xe4\xb8\xbb\xe6\x8e\xa7\xe5\xb9\xb6\xe9\x80\x89\xe6\x8b\xa9\xe8\xa6\x81\xe5\xbd\x95\xe5\x88\xb6\xe6\x88\x96\xe5\x81\x9c\xe6\xad\xa2\xe7\x9a\x84\xe8\xa7\x86\xe9\xa2\x91");
         _operationError = true;
         emit changed();
@@ -130,8 +173,9 @@ void XBoardRecordingController::request(const QString& action, const QStringList
     _busy = true;
     if (action != "status") { _error.clear(); _operationError = false; }
     emit changed();
+    const QJsonObject payload = lidarAction ? QJsonObject{} : QJsonObject{{"streams", QJsonArray::fromStringList(keys)}};
     QNetworkReply* reply = action == "status" ? _network.get(networkRequest) :
-        _network.post(networkRequest, QJsonDocument(QJsonObject{{"streams", QJsonArray::fromStringList(keys)}}).toJson(QJsonDocument::Compact));
+        _network.post(networkRequest, QJsonDocument(payload).toJson(QJsonDocument::Compact));
     _reply = reply;
     auto timeout = new QTimer(reply);
     timeout->setSingleShot(true);
@@ -141,18 +185,21 @@ void XBoardRecordingController::request(const QString& action, const QStringList
         timeout->stop();
         _reply = nullptr;
         _busy = false;
-        const QByteArray bytes = reply->readAll();
+        const QByteArray bytes = reply->isOpen() ? reply->readAll() : QByteArray{};
         const auto object = QJsonDocument::fromJson(bytes).object();
         const int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         const auto statusObject = object.value("status").toObject();
         if (reply->error() == QNetworkReply::NoError && httpStatus == 200 &&
             object.value("ok").toBool() && statusObject.value("api_version").toInt() == 1 &&
             statusObject.value("streams").isArray() && statusObject.value("storage").isObject()) {
-            _status = statusObject.toVariantMap();
+            auto normalized = statusObject;
+            if (normalized.contains("lidar")) normalized["lidar"] = checkedLidarStatus(normalized.value("lidar"));
+            _status = normalized.toVariantMap();
             _connected = true;
             if (!_operationError) _error.clear();
         } else {
             _connected = false;
+            _status.clear(); // A failed poll must not leave old recording badges or paths looking current.
             if (httpStatus == 401) { _code.clear(); _poll.stop(); }
             _operationError = action != "status";
             _error = object.value("error").toString();

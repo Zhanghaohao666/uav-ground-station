@@ -33,6 +33,7 @@ private slots:
             QJsonObject{{"key","gimbal"},{"label",QStringLiteral("云台可见光")},{"available",true},{"phase","stopped"},{"state",QStringLiteral("未录像")}},
             QJsonObject{{"key","gimbal_ir"},{"label",QStringLiteral("云台红外")},{"available",true},{"phase","stopped"},{"state",QStringLiteral("未录像")}}};
         status["storage"]=QJsonObject{{"mounted",true},{"free_bytes",3.97e11},{"reserve_bytes",10737418240.0},{"error",""}};
+        status["lidar"]=FakeBoard::lidarStatus("recording",true,true);
         object["status"]=status;server.response=QJsonDocument(object).toJson();
         QQmlEngine engine;QQmlComponent component(&engine);
         component.setData(R"(import QtQuick 2.15
@@ -61,9 +62,69 @@ ApplicationWindow {
         QVERIFY(server.requests.last().contains("[\"board\"]"));
         auto window=qobject_cast<QQuickWindow*>(root.data());QVERIFY(window);
         QTest::qWait(100);
+        auto close=dialog->findChild<QQuickItem*>("closeRecording");QVERIFY(close);
+        auto scroll=dialog->findChild<QQuickItem*>("recordingScroll");QVERIFY(scroll);
+        auto list=dialog->findChild<QQuickItem*>("recordingStreams");QVERIFY(list);
+        QVERIFY(scroll->height()>100);QVERIFY(list->height()>100);
+        const auto closeBottom=close->mapToScene(QPointF(close->width(),close->height()));
+        QVERIFY(closeBottom.y()<=window->height());QVERIFY(closeBottom.x()<=window->width());
+        QVERIFY(dialog->findChild<QQuickItem*>("stopLidarRecording")->isEnabled());
+        QVERIFY(!dialog->findChild<QQuickItem*>("startLidarRecording")->isEnabled());
         const QString screenshot=qEnvironmentVariable("UAV_RECORD_UI_SCREENSHOT");
         if (!screenshot.isEmpty()) QVERIFY(window->grabWindow().save(screenshot));
         QVERIFY(QMetaObject::invokeMethod(dialog,"close"));QTest::qWait(50);QCOMPARE(server.requests.size(),initialRequests+1);
+    }
+    void lidarDialogStatesActionsAndReconnect() {
+        FakeBoard server;server.setLidar(FakeBoard::lidarStatus("idle",false));
+        QQmlEngine engine;QQmlComponent component(&engine);
+        component.setData(R"(import QtQuick 2.15
+import QtQuick.Controls 2.15
+import RecordingTests 1.0
+ApplicationWindow {
+    width: 1000; height: 760; visible: true
+    BoardController { id: c; objectName: "controller" }
+    RecordingDialog { objectName: "dialog"; controller: c }
+})",QUrl());
+        QScopedPointer<QObject> root(component.create());QVERIFY2(root,qPrintable(component.errorString()));
+        auto c=root->findChild<XBoardRecordingController*>("controller");QVERIFY(c);
+        auto dialog=root->findChild<QObject*>("dialog");QVERIFY(dialog);
+        QVERIFY(c->configure(server.address()));QTRY_VERIFY(c->connected());
+        QVERIFY(QMetaObject::invokeMethod(dialog,"open"));QTRY_VERIFY(dialog->property("opened").toBool());
+        QTRY_VERIFY(!c->busy());
+        auto start=dialog->findChild<QQuickItem*>("startLidarRecording");QVERIFY(start);
+        auto stop=dialog->findChild<QQuickItem*>("stopLidarRecording");QVERIFY(stop);
+        auto state=dialog->findChild<QObject*>("lidarRecordingState");QVERIFY(state);
+        QVERIFY(!start->isEnabled());QVERIFY(!stop->isEnabled());
+        QCOMPARE(state->property("text").toString(),QStringLiteral("雷达未连接或未供电"));
+        server.setLidar(FakeBoard::lidarStatus());c->refresh();QTRY_VERIFY(!c->busy());
+        QTRY_VERIFY(start->isEnabled());
+        server.setLidar(FakeBoard::lidarStatus("starting",true,true));
+        QVERIFY(QMetaObject::invokeMethod(start,"clicked"));QTRY_VERIFY(!c->busy());
+        QVERIFY(server.requests.last().startsWith("POST /v1/lidar/start "));
+        QCOMPARE(state->property("text").toString(),QStringLiteral("正在启动，等待雷达数据…"));
+        QVERIFY(!start->isEnabled());QVERIFY(stop->isEnabled());
+        server.setLidar(FakeBoard::lidarStatus("recording",true,true));c->refresh();QTRY_VERIFY(!c->busy());
+        QCOMPARE(state->property("text").toString(),QStringLiteral("正在录制雷达"));
+        QVERIFY(dialog->findChild<QObject*>("lidarRecordingSize")->property("text").toString().endsWith("MiB"));
+        const auto good=server.response;server.response="not-json";c->refresh();QTRY_VERIFY(!c->busy());
+        QCOMPARE(state->property("text").toString(),QStringLiteral("状态未确认"));
+        QVERIFY(!start->isEnabled());QVERIFY(!stop->isEnabled());
+        QCOMPARE(dialog->findChild<QObject*>("lidarRecordingSize")->property("text").toString(),QString());
+        server.response=good;const int before=server.requests.size();c->refresh();QTRY_VERIFY(c->connected());
+        QCOMPARE(server.requests.size(),before+1);QVERIFY(server.requests.last().startsWith("GET /v1/status "));
+        server.setLidar(FakeBoard::lidarStatus("stopped"));
+        QVERIFY(QMetaObject::invokeMethod(stop,"clicked"));QTRY_VERIFY(!c->busy());
+        QVERIFY(server.requests.last().startsWith("POST /v1/lidar/stop "));
+        QCOMPARE(state->property("text").toString(),QStringLiteral("已停止"));
+        QVERIFY(start->isEnabled());QVERIFY(!stop->isEnabled());
+        auto malformed=FakeBoard::lidarStatus();malformed["phase"]="unknown";server.setLidar(malformed);
+        c->refresh();QTRY_VERIFY(!c->busy());QVERIFY(c->connected());QVERIFY(!start->isEnabled());
+        QVERIFY(state->property("text").toString().contains(QStringLiteral("状态异常")));
+        auto object=QJsonDocument::fromJson(server.response).object();auto status=object["status"].toObject();
+        status.remove("lidar");object["status"]=status;server.response=QJsonDocument(object).toJson();
+        c->refresh();QTRY_VERIFY(!c->busy());QVERIFY(c->connected());
+        QVERIFY(state->property("text").toString().contains(QStringLiteral("更新板端服务")));
+        QVERIFY(!start->isEnabled());QVERIFY(!stop->isEnabled());
     }
 };
 int main(int argc,char** argv) {

@@ -84,5 +84,16 @@
     "tests": "Windows 全工程编译、RTSP/H264 插件、Qt 主窗口创建/可见/30 秒存活通过。ZIP 完整性、x64 与 SHA256 一致通过；实板/MK22 仍需现场验收。",
     "build_commit": "d00cb39a3e0ba760d3ec751fed5d1a861082651e",
     "windows_archive_sha256": "927c6cefcd5cbb9a7e7199ece512747f980b7bc9a03a0a1b7ee3368fc3aef523"
+  },
+  {
+    "tag": "v1.01.16-lidar-record",
+    "date": "2026-10-23",
+    "title": "E1X 板端数据录制",
+    "features": [
+      "地面站独立控制 E1X 点云录制，自动连接，状态/大小/保存路径。",
+      "数据保存主控 /data/uav-lidar，关闭地面站继续，主控重启不自采集。",
+      "旧板端视频接口兼容，缺少雷达后端时提示更新。"
+    ],
+    "tests": "见对应 GitHub Actions 和发布说明；当前雷达未连接，实时长录需接线后验收。"
   }
 ]

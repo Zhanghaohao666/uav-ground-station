@@ -81,6 +81,7 @@ $info = [ordered]@{
     board_ssh_login = 'automatic-fixed-dev-profile'
     board_askpass_lookup = 'basename-in-private-child-path'
     board_recording_connection = 'automatic-ssh-bootstrap-no-code-entry'
+    board_lidar_recording = 'e1x-on-demand-mainboard-inno-pc'
     board_ssh_native_direct_and_jump_auth_verified = $true
     board_recording_native_ssh_bootstrap_verified = $true
     board_askpass_sha256 = (Get-FileHash "$package/NexusBoardAskpass.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -110,6 +111,8 @@ Copy-Item -Path @("$source\tools\windows\License-Information.cmd", "$source\tool
 新增“板卡维护”：打开主控/算法板 SSH 终端，查看状态和地址、分路重启及打开 uav-switch 菜单。
 SSH 客户端随包提供，无需互联网安装；仍需 MK22/网线/Wi-Fi 局域网连通。自动使用固定 dev/dev 登录，快捷命令自动提权；IP 和端口可修改并记住。
 板端录像只需主控 IP，自动连接，不再需要填写录像连接码；选择视频后开始，默认保存在 /data/uav-recordings。
+同一窗口的 E1X 雷达区域可单独开始/停止原始点云录制，默认保存在主控 /data/uav-lidar。
+关闭地面站后板端录制继续；停止视频不会停止雷达。雷达未连接时显示原因，旧板端须先更新雷达录制后端。
 MK22 默认主控 192.168.2.36；Wi-Fi 调试使用 192.168.1.104。
 版本和源码提交见 BUILD_INFO.json，功能说明见“使用说明”。
 Windows EXE 已内置本包视频插件路径及独立缓存，无需诊断脚本设置环境。
